@@ -2,6 +2,8 @@
 
 三笠法による二次元圧密沈下シミュレーター
 
+**更新**: Terzaghi 2D圧密理論（εx=0条件）シミュレーターを追加し、三笠法との比較機能を実装しました。
+
 ## 概要
 
 このプロジェクトは、側方変位を考慮した三笠の2次元圧密理論（Mikasa, 1965）を実装したシミュレーターです。Apple SiliconのGPU加速を活用するため、MLXフレームワークを使用して最適化されています。
@@ -90,6 +92,35 @@ $$
 
 ポアソン効果による側方変位を簡易的に計算します。
 
+### Terzaghi 2次元圧密理論（新規追加）
+
+Terzaghi理論は、側方ひずみがゼロ（εx = 0）と仮定する拘束圧密条件（oedometer condition）を採用しています。
+
+**過剰間隙水圧の消散方程式は三笠法と同じ**ですが、ひずみの計算が異なります：
+
+#### 拘束圧密係数
+
+$$
+D = \frac{E(1-\nu)}{(1+\nu)(1-2\nu)}
+$$
+
+#### 鉛直ひずみ（側方ひずみなし）
+
+$$
+\varepsilon_z = \frac{\Delta\sigma'_{\text{eff}}}{D}
+$$
+
+#### 水平変位
+
+$$
+u_x = 0 \quad (\varepsilon_x = 0 \text{ 条件})
+$$
+
+**三笠法との違い**:
+- 三笠法: 側方変位を許容 ($\varepsilon_x \neq 0$)，より大きな水平変位が発生
+- Terzaghi法: 側方ひずみがゼロ ($\varepsilon_x = 0$)，水平変位なし
+- 過剰間隙水圧消散: 両者で同じ2次元拡散方程式を使用
+
 ## インストール
 
 ### 必要環境
@@ -144,6 +175,52 @@ result = simulator.run_simulation(verbose=True)
 # 結果の可視化
 simulator.plot_results(save_path="result.png")
 ```
+
+### Terzaghi 2D理論での実行
+
+```python
+from Terzaghi import TerzaghiConsolidationSimulator
+
+# Terzaghiシミュレーター初期化（εx = 0条件）
+simulator = TerzaghiConsolidationSimulator(
+    length=20.0,           # 土層の横幅 (m)
+    depth=10.0,            # 土層の深さ (m)
+    nx=51,                 # x方向の格子点数
+    nz=26,                 # z方向の格子点数
+    cv=1.0,                # 圧密係数 (m²/day)
+    E=5000.0,              # ヤング率 (kPa)
+    dt=0.01,               # 時間刻み (day)
+    total_time=3650.0,     # 総シミュレーション時間 (10年)
+    load_intensity=100.0,  # 荷重強度 (kPa)
+    load_width=4.0,        # 荷重幅 (m)
+    poisson_ratio=0.3,     # ポアソン比
+)
+
+# シミュレーション実行
+result = simulator.run_simulation(verbose=True)
+
+# 結果の可視化
+simulator.plot_results(save_path="terzaghi_result.png")
+```
+
+### 三笠法とTerzaghi法の比較実行
+
+```bash
+uv run Terzaghi.py
+```
+
+このコマンドで：
+1. Terzaghiシミュレーションを実行
+2. Mikasaシミュレーションも実行
+3. 両者の結果を比較したプロット生成
+
+比較プロットには以下が含まれます：
+- 中心線での沈下量プロファイル比較
+- 表面沈下量分布
+- 水平変位分布
+- 沈下量コンター図（Terzaghi vs Mikasa）
+- 水平変位コンター図（Terzaghi vs Mikasa）
+- 沈下量差分
 
 ## 出力結果
 
@@ -233,6 +310,34 @@ $$
 - 配列操作の効率化（concatenateによる不変配列の構築）
 - Jacobi法の収束判定（100反復、許容誤差1e-4）
 
+## 三笠法 vs Terzaghi法 比較
+
+### 理論的相違点
+
+| 項目 | Terzaghi法 | 三笠法 |
+|-----|-----------|-------|
+| 側方ひずみ | εx = 0 | εx ≠ 0 |
+| 拘束条件 | 拘束圧密（oedometer） | 側方変位自由 |
+| 水平変位 | なし | あり（Poisson効果） |
+| 圧密方程式 | ∂u/∂t = cv(∂²u/∂x² + ∂²u/∂z²) | 同じ |
+| ひずみ計算 | εz = σ'eff / D | εz = σ'eff(1-2νK₀) / E |
+| 適用例 | 厚い土層の鉛直沈下評価 | 側方変位を考慮した詳細解析 |
+
+### 沈下量の関係
+
+同一の材料定数とパラメータの場合、Terzaghi法の拘束圧密係数Dと三笠法の係数(1-2νK₀)は数学的に同じになるため、**沈下量はほぼ同じ**です。
+
+主な違いは：
+- **Terzaghi法**: 水平変位 = 0
+- **三笠法**: 水平変位が発生（特に土層の側面で大きい）
+
+### 出力ファイル
+
+比較実行時に以下のファイルが生成されます：
+
+- `terzaghi_consolidation_result.png` - Terzaghi法の単独結果
+- `terzaghi_mikasa_comparison.png` - 詳細比較プロット
+
 ## パラメータガイド
 
 ### 推奨値
@@ -281,6 +386,12 @@ $$
 - **最適化対象**: Apple Silicon (M1/M2/M3 chips)
 
 ## 更新履歴
+
+### v1.1.0 (2026-02-01)
+- Terzaghi 2D圧密理論シミュレーター追加 (Terzaghi.py)
+- εx = 0（拘束圧密）条件の実装
+- 三笠法との比較プロット機能を実装
+- 拘束圧密係数Dの計算と明示的な記述
 
 ### v1.0.0 (2026-01-30)
 - MLXフレームワークへの移行完了
