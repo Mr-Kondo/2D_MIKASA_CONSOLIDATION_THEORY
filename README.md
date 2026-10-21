@@ -108,7 +108,7 @@ $$
 uv run --locked python -m unittest -v
 ```
 
-連続方程式の解析解への格子収束、時間刻みの2次収束、小格子での直接Crank–Nicolson解との一致、帯荷重の応力、固定底面、ゼロ荷重、入力異常、リセット、両入口と画像出力を検証します。実施環境・Issue・最小性の3回のレビューは [MAINTENANCE.md](MAINTENANCE.md) に記録します。
+連続方程式の解析解への格子収束、時間刻みの2次収束、小格子での直接Crank–Nicolson解との一致、帯荷重の応力、固定底面、ゼロ荷重、入力異常、リセット、両入口と画像出力を検証します。GitHub Actions が push と pull_request で、Linux 上の Python 3.13・3.15 の同じテストを実行します。実施環境・Issue・最小性の3回のレビューは [MAINTENANCE.md](MAINTENANCE.md) に記録します。
 
 ## 参考文献
 
