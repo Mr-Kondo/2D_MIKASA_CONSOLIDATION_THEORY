@@ -40,7 +40,7 @@ class ConsolidationTests(unittest.TestCase):
 
     def test_time_refinement_converges_to_semidiscrete_solution(self):
         errors = []
-        for step in (0.2, 0.1, 0.05):
+        for step in (0.05, 0.025, 0.0125):
             simulator = ConsolidationSimulator(nx=11, nz=11, dt=step, total_time=0.4)
             z = np.linspace(0, simulator.depth, simulator.nz)
             initial = 50 * np.sin(np.pi * z / (2 * simulator.depth))[:, None]
@@ -62,11 +62,13 @@ class ConsolidationTests(unittest.TestCase):
         simulator.run_simulation(verbose=False)
         np.testing.assert_allclose(simulator.u, expected, atol=1e-11, rtol=1e-12)
 
-    def test_zero_amplification_mode_is_removed_without_nan(self):
-        simulator = ConsolidationSimulator(length=1, depth=1, nx=2, nz=2, dt=1/3, total_time=1/3)
+    def test_fully_decayed_mode_is_finite_without_nan(self):
+        simulator = ConsolidationSimulator(length=1, depth=1, nx=2, nz=2, dt=0.25, total_time=50)
         simulator.u[1] = [1, 0]
         simulator.run_simulation(verbose=False)
-        np.testing.assert_allclose(simulator.u[1], [0.25, 0.25], atol=1e-14)
+        self.assertTrue(np.isfinite(simulator.u).all())
+        self.assertGreaterEqual(simulator.u.min(), 0)
+        self.assertLess(simulator.u.max(), 1e-12)
 
     def test_eigenmode_evaluation_matches_direct_crank_nicolson_including_boundaries(self):
         for nx, nz, dt, duration in ((2, 2, 0.2, 0.3), (5, 4, 0.07, 0.2),
@@ -179,6 +181,16 @@ class ConsolidationTests(unittest.TestCase):
         self.assertTrue(is_negligible_field(np.full((3, 4), 1e-38), 100))
         self.assertFalse(is_negligible_field(np.full((3, 4), 1.0), 100))
         self.assertFalse(is_negligible_field(np.full((3, 4), 1e-6), 100))
+
+    def test_time_step_limit_keeps_worst_mode_amplification_nonnegative(self):
+        for nx, nz, dt in ((8, 5, 1e6), (2, 2, 10.0), (51, 26, 0.01)):
+            with self.subTest(nx=nx, nz=nz, dt=dt):
+                simulator = ConsolidationSimulator(nx=nx, nz=nz, dt=dt, total_time=1.0)
+                half_step = 0.5 * simulator.dt * simulator.cv * (
+                    4 / simulator.dx**2 + 4 / simulator.dz**2)
+                self.assertGreaterEqual(half_step, -1.0)
+                self.assertLessEqual(simulator.dt, 0.5 / (simulator.cv * (
+                    1 / simulator.dx**2 + 1 / simulator.dz**2)) * (1 + 1e-12))
 
     def test_plot_results_renders_both_live_and_dissipated_fields(self):
         for total_time in (0.1, 1e5):

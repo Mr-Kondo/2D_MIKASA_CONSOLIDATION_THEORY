@@ -88,8 +88,9 @@ class ConsolidationSimulator:
             rate = cv * inverse_spacing.sum()
         if not math.isfinite(self.D) or not math.isfinite(rate):
             raise ValueError("derived material or diffusion coefficients are not finite")
-        # 無条件安定でも大きなdtでは振動するため、右辺の係数が非負となる刻みに制限する。
-        step_limit = min(dt, 1 / rate) if rate > 0 else dt
+        # 無条件安定でも大きなdtでは振動する。最悪モードの h=½Δtλ (λmax≤4cv(1/Δx²+1/Δz²)) を
+        # -1 以上に保ち、各モードの増幅率 (1+h)/(1-h) を非負にする。
+        step_limit = min(dt, 0.5 / rate) if rate > 0 else dt
         if not math.isfinite(total_time / step_limit):
             raise ValueError("total_time / time step must be finite")
         self.nt = max(1, math.ceil(total_time / step_limit))
