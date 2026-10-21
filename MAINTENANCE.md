@@ -138,7 +138,7 @@ dc68be0a47b9bea2b9dd8f705dd12771042e62b691e52826342427c3c516fe24   # #7〜#11 �
 - CI は Linux・Python 3.13/3.15 の unittest のみ。macOS・Windows・GPU・実地盤は未検証。
 - ライセンス表記は未設定（ユーザーの判断が必要）。
 
-## 追記（Issue #7〜#11）
+## 追記（Issue #7〜#11, #20）
 
 #1〜#6 のマージ後に見つかった問題は、隠さず Issue にして1件ずつ修正した。
 
@@ -151,6 +151,10 @@ dc68be0a47b9bea2b9dd8f705dd12771042e62b691e52826342427c3c516fe24   # #7〜#11 �
 - #9（修正済み）: `_require_real` で `bool`・文字列・`None` を `ValueError` にした。境界検証テストの表に入力例を追加。
 - #10（修正済み）: `show_if_interactive()` を追加し、非対話バックエンド（Agg など）では `plt.show()` を呼ばない。
 - #11（修正済み）: `.github/workflows/tests.yml` を追加。Linux 上の Python 3.13・3.15 でテストを実行し、PR #17 の時点で両方成功した。
+- #20（修正済み）: CI の `actions/checkout@v4` と `astral-sh/setup-uv@v5` が Node.js 20 ランタイムで、
+  非推奨の注記が出ていた。`@v7` と `@v10.3.0` に上げ、`uv run --locked python -VV` で実行環境をログに出した。
+  PR #21 の時点で 3.13.16 と 3.15.0 の両ジョブが成功し、注記は消えた。
+  `ubuntu-latest` の Ubuntu 26 移行の注記は GitHub 側の予告で、現状のワークフローには影響しないため未対応。
 
 ## 後片付け
 
