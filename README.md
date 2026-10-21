@@ -192,12 +192,21 @@ GitHub Actions が push と pull_request で、Linux 上の Python 3.13・3.15 �
 - macOS 以外のOS、GPU、実地盤データでの実行。
 - 原著論文との逐語的な一致、三次元化、せん断をともなう二次元圧密。
 
+## ドキュメント
+
+理論の導出と、参照文献の確認状況は [docs/](docs/) にあります。
+
+- [docs/theory.md](docs/theory.md): 物質座標、材料則、貯留式の導出、数値解法、二次元化の位置づけ。
+- [docs/references.md](docs/references.md): 参考論文と資料の一覧、用途、確認した範囲。
+
 ## 参考文献
 
 - [Pane and Schiffman (1981), Comparison Between Two Theories of Finite Strain Consolidation](https://doi.org/10.3208/sandf1972.21.4_81): 三笠理論が有限ひずみ圧密を扱うことを確認する資料。今回確認したのは要約・書誌情報です。
 - [USACE (1990), EM 1110-1-1904, Settlement Analysis, Table C-1](https://www.publications.usace.army.mil/Portals/76/Publications/EngineerManuals/EM_1110-1-1904.pdf): 帯荷重の鉛直応力式。
 - [MIT (2014), 18.303 Lecture 21](https://ocw.mit.edu/courses/18-303-linear-partial-differential-equations-analysis-and-numerics-fall-2014/1788556bb2a2f52f03bdcfc720987d1e_MIT18_303F14_Lecture21.pdf): 拡散方程式とCrank–Nicolson法の符号・安定性。
 - [NumPy: `numpy.linalg.eigh`](https://numpy.org/doc/stable/reference/generated/numpy.linalg.eigh.html): 対称行列の固有値分解。
+
+各文献の用途と、本文・要約・書誌のどこまでを確認したかは [docs/references.md](docs/references.md) にあります。
 
 ## ライセンス
 
