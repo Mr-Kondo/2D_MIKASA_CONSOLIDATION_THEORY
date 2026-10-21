@@ -15,12 +15,14 @@ jobs:
     env:
       MPLBACKEND: Agg
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: false
       - name: Install locked dependencies
         run: uv sync --locked
+      - name: Show interpreter version
+        run: uv run --locked python -VV
       - name: Run tests
         run: uv run --locked python -m unittest -v
