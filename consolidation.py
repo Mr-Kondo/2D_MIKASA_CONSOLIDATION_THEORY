@@ -21,6 +21,11 @@ def _weighted_modes(matrix, weights):
     return rates, basis
 
 
+def is_negligible_field(values, reference):
+    """基準量に対して無視できる場か。色の濃淡で表さない判定に使う。"""
+    return bool(np.max(np.abs(values)) < 1e-9 * reference)
+
+
 def _validate_scalars(positive, nonnegative):
     for name, value in positive.items():
         if not math.isfinite(value) or value <= 0:
@@ -169,11 +174,24 @@ class ConsolidationSimulator:
         z = np.linspace(0, self.depth, self.nz)
         fig, axes = plt.subplots(1, 3, figsize=figsize)
         fields = (self.disp_z, self.disp_x, self.u)
+        references = (self.depth, self.depth, self.load_intensity)
         titles = ("Settlement (fixed base)", "Horizontal displacement (constrained)", "Excess pore pressure")
         units = ("m", "m", "kPa")
-        for ax, field, title, unit in zip(axes, fields, titles, units):
-            contour = ax.contourf(x, z, field, levels=50)
-            fig.colorbar(contour, ax=ax, label=unit)
+        for ax, field, reference, title, unit in zip(axes, fields, references, titles, units):
+            if np.ptp(field) == 0:
+                # 一定の場は丸め誤差の等値線とカラーバーを作らず、値だけを示す。
+                ax.text(0.5, 0.5, f"{field.flat[0]:.3g} {unit} everywhere",
+                        transform=ax.transAxes, ha="center", va="center")
+                ax.set_xticks([])
+                ax.set_yticks([])
+            elif is_negligible_field(field, reference):
+                ax.text(0.5, 0.5, f"≈0 (max {np.max(np.abs(field)):.3g} {unit})",
+                        transform=ax.transAxes, ha="center", va="center")
+                ax.set_xticks([])
+                ax.set_yticks([])
+            else:
+                contour = ax.contourf(x, z, field, levels=50)
+                fig.colorbar(contour, ax=ax, label=unit)
             ax.set(xlabel="Distance (m)", ylabel="Depth (m)", title=title)
             ax.invert_yaxis()
         fig.tight_layout()

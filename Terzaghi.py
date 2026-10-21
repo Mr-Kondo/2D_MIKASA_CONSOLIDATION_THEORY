@@ -4,23 +4,38 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from consolidation import ConsolidationSimulator as TerzaghiConsolidationSimulator
-from consolidation import run_example
+from consolidation import is_negligible_field, run_example
 
 
 def plot_comparison(terzaghi_sim, mikasa_sim):
     """旧比較API。異なる理論の比較ではなく、渡された2状態を描画する。"""
+    simulators = ((terzaghi_sim, "Terzaghi (legacy name)", "-"),
+                  (mikasa_sim, "Mikasa (legacy name)", "--"))
+    load_scale = max(float(simulator.total_stress.max()) for simulator, _, _ in simulators)
+    pressure_visible = any(not is_negligible_field(simulator.u, load_scale)
+                           for simulator, _, _ in simulators)
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-    for simulator, label, style in ((terzaghi_sim, "Terzaghi (legacy name)", "-"),
-                                    (mikasa_sim, "Mikasa (legacy name)", "--")):
+    for simulator, label, style in simulators:
         settlement, _, pressure, _ = simulator.get_current_state()
         z = np.linspace(0, simulator.depth, simulator.nz)
         center = simulator.nx // 2
         axes[0].plot(settlement[:, center] * 1000, z, style, label=label)
-        axes[1].plot(pressure[:, center], z, style, label=label)
-    for ax, title in zip(axes, ("Center settlement (mm)", "Center pore pressure (kPa)")):
-        ax.set(xlabel=title, ylabel="Depth (m)")
+        if pressure_visible:
+            axes[1].plot(pressure[:, center], z, style, label=label)
+    if pressure_visible:
+        axes[1].legend()
+    else:
+        # 消散済みの水圧を丸め誤差の軸で描かない。
+        axes[1].text(0.5, 0.5, "excess pore pressure ≈ 0", transform=axes[1].transAxes,
+                     ha="center", va="center")
+        axes[1].set_xticks([])
+    axes[0].set(xlabel="Center settlement (mm)", ylabel="Depth (m)")
+    axes[1].set(xlabel="Center pore pressure (kPa)", ylabel="Depth (m)")
+    for ax in axes:
         ax.invert_yaxis()
-        ax.legend()
+    axes[0].legend()
+    if not pressure_visible:
+        axes[1].set_ylim(axes[0].get_ylim())
     fig.suptitle("Legacy aliases: same simplified model, not two consolidation theories")
     fig.tight_layout()
     try:
