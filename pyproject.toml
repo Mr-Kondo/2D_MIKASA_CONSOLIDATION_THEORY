@@ -4,6 +4,8 @@ version = "0.1.0"
 description = "Constant-coefficient 2D pore-pressure diffusion with constrained-strain settlement"
 readme = "README.md"
 requires-python = ">=3.13"
+license = "MIT"
+license-files = ["LICENSE"]
 dependencies = [
     "matplotlib>=3.11.2",
     "numpy>=2.5.4",

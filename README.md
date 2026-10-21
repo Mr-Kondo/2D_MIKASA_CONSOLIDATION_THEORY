@@ -116,3 +116,7 @@ uv run --locked python -m unittest -v
 - [USACE (1990), EM 1110-1-1904, Settlement Analysis, Table C-1](https://www.publications.usace.army.mil/Portals/76/Publications/EngineerManuals/EM_1110-1-1904.pdf): 帯荷重の鉛直応力式。
 - [MIT (2014), 18.303 Lecture 21](https://ocw.mit.edu/courses/18-303-linear-partial-differential-equations-analysis-and-numerics-fall-2014/1788556bb2a2f52f03bdcfc720987d1e_MIT18_303F14_Lecture21.pdf): 拡散方程式とCrank–Nicolson法の符号・安定性。
 - [NumPy: `numpy.linalg.eigh`](https://numpy.org/doc/stable/reference/generated/numpy.linalg.eigh.html): 対称行列の固有値分解。
+
+## ライセンス
+
+MIT ライセンスです。全文は [LICENSE](LICENSE) を参照してください。
