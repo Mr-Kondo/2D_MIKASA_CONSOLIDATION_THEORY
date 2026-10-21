@@ -13,7 +13,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from consolidation import ConsolidationSimulator
+from consolidation import ConsolidationSimulator, is_negligible_field
 from Mikasa import MikasaConsolidationSimulator
 from Terzaghi import TerzaghiConsolidationSimulator
 
@@ -173,6 +173,21 @@ class ConsolidationTests(unittest.TestCase):
                          "terzaghi_mikasa_comparison.png"):
                 self.assertEqual(plt.imread(Path(directory) / name).ndim, 3)
         self.assertEqual(plt.get_fignums(), [])
+
+    def test_negligible_field_detection_uses_the_reference_scale(self):
+        self.assertTrue(is_negligible_field(np.zeros((3, 4)), 100))
+        self.assertTrue(is_negligible_field(np.full((3, 4), 1e-38), 100))
+        self.assertFalse(is_negligible_field(np.full((3, 4), 1.0), 100))
+        self.assertFalse(is_negligible_field(np.full((3, 4), 1e-6), 100))
+
+    def test_plot_results_renders_both_live_and_dissipated_fields(self):
+        for total_time in (0.1, 1e5):
+            with self.subTest(total_time=total_time), tempfile.TemporaryDirectory() as directory:
+                simulator = ConsolidationSimulator(nx=5, nz=5, total_time=total_time)
+                simulator.run_simulation(verbose=False)
+                simulator.plot_results(save_path=Path(directory) / "field.png", show=False, dpi=30)
+                self.assertTrue((Path(directory) / "field.png").is_file())
+                self.assertEqual(plt.get_fignums(), [])
 
     def test_plot_is_closed_when_output_directory_is_missing(self):
         simulator = ConsolidationSimulator(nx=3, nz=3, total_time=0.1)
