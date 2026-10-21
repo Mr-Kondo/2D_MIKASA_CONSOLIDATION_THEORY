@@ -187,7 +187,7 @@ class ConsolidationSimulator:
         self._initial_pressure_integral = self._pressure_integral()
         self._update_displacement()
 
-    def plot_results(self, save_path=None, show=True, figsize=(18, 5), dpi=300):
+    def plot_results(self, save_path=None, show=False, figsize=(18, 5), dpi=300):
         x = np.linspace(0, self.length, self.nx)
         z = np.linspace(0, self.depth, self.nz)
         fig, axes = plt.subplots(1, 3, figsize=figsize)

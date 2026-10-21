@@ -1,0 +1,21 @@
+[
+  {
+    "script": "Mikasa.py",
+    "exit_code": 0,
+    "stdout": "BACKEND MacOSX\nSimulation time: 2.710 seconds (NumPy CPU)\nBackward Euler: 730 steps, dt=5 day, 0 automatic subdivisions\nSurface center settlement: 376.53 mm\nVoid ratio at surface center: 1.5167 (initial 1.9064)\nRemaining excess pore pressure (max |u|): 0.07 kPa\nConsolidation degree (pressure integral): 100.1%\n",
+    "stderr": ""
+  },
+  {
+    "script": "Terzaghi.py",
+    "exit_code": 0,
+    "stdout": "BACKEND MacOSX\nSimulation time: 0.000 seconds (NumPy CPU)\nCrank-Nicolson: 343465 steps, dt=0.010627 day (evaluated in eigenmodes)\nSurface center settlement: 40.06 mm\nRemaining excess pore pressure: 0.00 kPa\nConsolidation degree (pressure integral): 100.0%\n",
+    "stderr": ""
+  },
+  {
+    "images": [
+      "mikasa_consolidation_result.png",
+      "terzaghi_consolidation_result.png",
+      "terzaghi_mikasa_comparison.png"
+    ]
+  }
+]

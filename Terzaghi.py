@@ -60,7 +60,7 @@ def run_pair(time_factor):
     return terzaghi, mikasa
 
 
-def plot_comparison(save_path="terzaghi_mikasa_comparison.png", show=True, figsize=(15, 5), dpi=300):
+def plot_comparison(save_path="terzaghi_mikasa_comparison.png", show=False, figsize=(15, 5), dpi=300):
     """寺田（線形・小ひずみ）と三笠（有限ひずみ）の比較図を保存する。"""
     final_factor = TIME_FACTORS[-1] / 2.0
     terzaghi, mikasa = run_pair(final_factor)
