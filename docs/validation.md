@@ -30,7 +30,7 @@
 | --- | --- |
 | macOS 27.0.1 / arm64 / Python 3.13.5・3.15.0 | 変更後の30テストが両版で成功。GPU実験は3.13.5。 |
 | Ubuntu / Python 3.13・3.15 | [PR #30のCI](https://github.com/Mr-Kondo/2D_MIKASA_CONSOLIDATION_THEORY/actions/runs/39632475009)で変更前の29テスト成功。今回の変更後は未実行。 |
-| GitHub ActionsのmacOS・Windows | CI行列を追加済み。まだ実行していないため、成功とは扱わない。 |
+| GitHub ActionsのUbuntu・macOS・Windows / Python 3.13・3.15 | [PR #31の6ジョブ](https://github.com/Mr-Kondo/2D_MIKASA_CONSOLIDATION_THEORY/actions/runs/39694413236)で、変更後の30テストがすべて成功。 |
 
 CIの構成は3OS×2バージョンで、全ジョブが`uv sync --locked`と同じテストを使います。
 `MPLBACKEND=Agg`で実行するため、CIの成功はGUIの確認を意味しません。
@@ -102,7 +102,7 @@ MPLBACKEND=Agg uv run --locked --with mlx==0.32.4 python benchmarks/gpu.py
 実地盤検証には、利用条件が明確な公開データと、層厚・排水境界・載荷履歴・初期間隙比・圧縮則・透水則の条件が必要です。
 完了条件は、パラメーターの出典、比較時点と誤差指標、格子・時間刻み依存性、モデルで表現できない条件を記録することです。
 文献の図を数値化する場合は、抽出方法と読取誤差も区別します。
-独立した追跡課題として扱い、データが不足したまま実装の妥当性を断定しません。
+[Issue #32](https://github.com/Mr-Kondo/2D_MIKASA_CONSOLIDATION_THEORY/issues/32)で独立して追跡し、データが不足したまま実装の妥当性を断定しません。
 
 ## 参考資料
 

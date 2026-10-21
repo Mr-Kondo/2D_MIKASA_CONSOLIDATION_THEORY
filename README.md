@@ -184,16 +184,16 @@ uv run --locked python -m unittest -v
 - 二次元既定例（21×21、730ステップ）: 中央沈下 `376.5 mm`、間隙比 `1.247〜1.906`、消散率 `100.1 %`、自動分割なし。
 - 入力異常、収束失敗の `RuntimeError`、リセット、1次元・2次元の画像出力、両入口スクリプトの完走を検証します。
 
-GitHub Actions の構成は、Linux・macOS・Windows の Python 3.13・3.15 で同じテストを実行する行列です。
-追加したOSのCIは未実行です。確認済みの結果と実行予定を区別して [docs/validation.md](docs/validation.md) に記録します。
+GitHub Actions はLinux・macOS・WindowsのPython 3.13・3.15で同じテストを実行します。
+[PR #31の6構成](https://github.com/Mr-Kondo/2D_MIKASA_CONSOLIDATION_THEORY/actions/runs/39694413236)ですべて30テストが成功しました。確認範囲は [docs/validation.md](docs/validation.md) に記録しています。
 実施環境・Issue・レビューの記録は [MAINTENANCE.md](MAINTENANCE.md) にあります。
 
 ## 未検証の範囲
 
 - 対話バックエンドでの画面表示と手動で閉じた後の終了。`MacOSX` のイベント待ちからの復帰を確認できず、画面表示を明示的な選択に変更しました。
-- Windows上での実行。Linuxは既存CI、macOSはローカルで検証済みです。
+- GUIバックエンドを使うWindows・Linuxでの画面表示。3OSのCIは`Agg`による非対話実行です。
 - GPUを正式なバックエンドとして使うこと。Apple M5での実験は [GPU検証](docs/validation.md#gpu計算の比較) を参照してください。
-- 実地盤データとの一致、401×401を超える格子での性能。
+- 実地盤データとの一致（[Issue #32](https://github.com/Mr-Kondo/2D_MIKASA_CONSOLIDATION_THEORY/issues/32)で追跡）、401×401を超える格子での性能。
 - 原著論文との逐語的な一致、三次元化、せん断をともなう二次元圧密。
 
 ## ドキュメント
