@@ -1,7 +1,7 @@
 [project]
 name = "2d-mikasa-consolidation-theory"
-version = "0.1.0"
-description = "Constant-coefficient 2D pore-pressure diffusion with constrained-strain settlement"
+version = "0.2.0"
+description = "Mikasa/Gibson-type finite-strain consolidation in material coordinates, with a linear small-strain reference"
 readme = "README.md"
 requires-python = ">=3.13"
 license = "MIT"
