@@ -396,7 +396,7 @@ class FiniteStrainTests(unittest.TestCase):
             self.assertLess(abs(deviation), 0.5)
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "comparison.png"
-            self.assertTrue(plot_comparison(save_path=path, show=False, dpi=30))
+            plot_comparison(save_path=path, show=False, dpi=30)
             self.assertTrue(path.is_file())
         self.assertEqual(plt.get_fignums(), [])
 

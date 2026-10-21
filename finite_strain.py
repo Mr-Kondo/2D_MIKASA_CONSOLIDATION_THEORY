@@ -80,6 +80,7 @@ class FiniteStrainConsolidation:
     載荷にともなう全応力分布の変化は解かない。
     """
 
+    # 既存APIと局所的な検証を保つため、長い初期化と引数を維持する。API改版時に再検討する。
     def __init__(
         self,
         length: float = 20.0,
@@ -116,8 +117,6 @@ class FiniteStrainConsolidation:
                 raise ValueError(f"{name} must be an integer >= 1")
         if nz < 2:
             raise ValueError("nz must be an integer >= 2")
-        if Ck <= 0:
-            raise ValueError("Ck must be finite and > 0")
 
         self.length, self.depth, self.nx, self.nz = length, depth, nx, nz
         self.e0, self.Cc, self.Ck, self.k0 = e0, Cc, Ck, k0
@@ -281,8 +280,8 @@ class FiniteStrainConsolidation:
     def _vertical_jacobian(self, void_ratio, step):
         """``_vertical_residual`` の三重対角ヤコビアン（Newton 法、対角は正）。
 
-        面 ``f`` のフラックス依存を ``p_f = ∂F_f/∂e_f``（下側セル）と
-        ``m_f = ∂F_f/∂e_{f-1}``（上側セル、``m_0 = 0``）で表す。
+        面 ``f`` のフラックス依存を ``face_below_f = ∂F_f/∂e_f``（下側セル）と
+        ``face_above_f = ∂F_f/∂e_{f-1}``（上側セル、``face_above_0 = 0``）で表す。
         """
         face = self._face_values(void_ratio)
         perm = self._permeability_at(face)
@@ -290,24 +289,27 @@ class FiniteStrainConsolidation:
         d_conductivity = conductivity * (LN10 / self.Ck - 1.0 / (1.0 + face))
         pressure = self._pore_pressure(void_ratio)
         sigma = self._effective_stress_at(void_ratio)
-        slope = LN10 / (self.Cc * self.d_zeta)
+        stress_per_void = LN10 / (self.Cc * self.d_zeta)  # ∂σ'/∂e = -σ' × この値
         gradient = (pressure[1:] - pressure[:-1]) / self.d_zeta
-        p = np.zeros_like(face)
-        m = np.zeros_like(face)
-        p[0] = conductivity[0] * (self.gamma_w + 2.0 * sigma[0] * slope)
-        p[1:self.nz] = (0.5 * d_conductivity[1:self.nz] * gradient
-                        + conductivity[1:self.nz] * (0.5 * self.gamma_w + sigma[1:] * slope))
-        m[1:self.nz] = (0.5 * d_conductivity[1:self.nz] * gradient
-                        + conductivity[1:self.nz] * (0.5 * self.gamma_w - sigma[:-1] * slope))
+        face_below = np.zeros_like(face)
+        face_above = np.zeros_like(face)
+        face_below[0] = conductivity[0] * (self.gamma_w + 2.0 * sigma[0] * stress_per_void)
+        face_below[1:self.nz] = (
+            0.5 * d_conductivity[1:self.nz] * gradient
+            + conductivity[1:self.nz] * (0.5 * self.gamma_w + sigma[1:] * stress_per_void))
+        face_above[1:self.nz] = (
+            0.5 * d_conductivity[1:self.nz] * gradient
+            + conductivity[1:self.nz] * (0.5 * self.gamma_w - sigma[:-1] * stress_per_void))
         scale = step / self.d_zeta
         lower = np.zeros((self.nz, self.nx))
         upper = np.zeros((self.nz, self.nx))
         diag = np.ones((self.nz, self.nx))
-        lower[1:] = scale * m[1:self.nz]
-        upper[:-1] = -scale * p[1:self.nz]
-        diag[0] = 1.0 - scale * (m[1] - p[0])
-        diag[1:self.nz - 1] = 1.0 - scale * (m[2:self.nz] - p[1:self.nz - 1])
-        diag[self.nz - 1] = 1.0 + scale * p[self.nz - 1]
+        lower[1:] = scale * face_above[1:self.nz]
+        upper[:-1] = -scale * face_below[1:self.nz]
+        diag[0] = 1.0 - scale * (face_above[1] - face_below[0])
+        diag[1:self.nz - 1] = 1.0 - scale * (
+            face_above[2:self.nz] - face_below[1:self.nz - 1])
+        diag[self.nz - 1] = 1.0 + scale * face_below[self.nz - 1]
         return lower, diag, upper
 
     def _horizontal_residual(self, previous, void_ratio, sigma_total, step, lagged):

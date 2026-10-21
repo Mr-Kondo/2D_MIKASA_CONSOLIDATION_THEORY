@@ -101,16 +101,13 @@ def plot_comparison(save_path="terzaghi_mikasa_comparison.png", show=True, figsi
     axes[1].invert_yaxis()
     fig.suptitle("Small-strain limit: the two theories agree (finite strain is O(load/σ'))")
     fig.tight_layout()
-    saved = False
     try:
         if save_path:
             fig.savefig(save_path, dpi=dpi, bbox_inches="tight")
-            saved = True
         if show:
             show_if_interactive()
     finally:
         plt.close(fig)
-    return saved
 
 
 def run_example(save_path):
