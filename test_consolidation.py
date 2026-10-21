@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import warnings
 
 import matplotlib
 
@@ -201,6 +202,15 @@ class ConsolidationTests(unittest.TestCase):
                 simulator.plot_results(save_path=Path(directory) / "field.png", show=False, dpi=30)
                 self.assertTrue((Path(directory) / "field.png").is_file())
                 self.assertEqual(plt.get_fignums(), [])
+
+    def test_headless_backend_does_not_warn_when_showing(self):
+        simulator = ConsolidationSimulator(nx=4, nz=4, total_time=0.1)
+        simulator.run_simulation(verbose=False)
+        with warnings.catch_warnings(record=True) as caught, tempfile.TemporaryDirectory() as directory:
+            warnings.simplefilter("always")
+            simulator.plot_results(save_path=Path(directory) / "shown.png", show=True, dpi=30)
+        non_interactive = [w for w in caught if "non-interactive" in str(w.message)]
+        self.assertEqual(non_interactive, [])
 
     def test_plot_is_closed_when_output_directory_is_missing(self):
         simulator = ConsolidationSimulator(nx=3, nz=3, total_time=0.1)

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from consolidation import ConsolidationSimulator as TerzaghiConsolidationSimulator
-from consolidation import is_negligible_field, run_example
+from consolidation import is_negligible_field, run_example, show_if_interactive
 
 
 def plot_comparison(terzaghi_sim, mikasa_sim):
@@ -40,7 +40,7 @@ def plot_comparison(terzaghi_sim, mikasa_sim):
     fig.tight_layout()
     try:
         fig.savefig("terzaghi_mikasa_comparison.png", dpi=300, bbox_inches="tight")
-        plt.show()
+        show_if_interactive()
     finally:
         plt.close(fig)
 

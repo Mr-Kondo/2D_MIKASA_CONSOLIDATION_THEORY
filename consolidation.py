@@ -5,6 +5,7 @@ import time
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.backends.registry import BackendFilter, backend_registry
 
 
 def _second_difference(size):
@@ -19,6 +20,13 @@ def _weighted_modes(matrix, weights):
     root = np.sqrt(weights)
     rates, basis = np.linalg.eigh(root[:, None] * matrix / root[None, :])
     return rates, basis
+
+
+def show_if_interactive():
+    """非対話バックエンドでは表示しない。Agg などで出る警告を避ける。"""
+    if plt.get_backend().lower() in backend_registry.list_builtin(BackendFilter.NON_INTERACTIVE):
+        return
+    plt.show()
 
 
 def is_negligible_field(values, reference):
@@ -209,7 +217,7 @@ class ConsolidationSimulator:
             if save_path:
                 fig.savefig(save_path, dpi=dpi, bbox_inches="tight")
             if show:
-                plt.show()
+                show_if_interactive()
         finally:
             plt.close(fig)
 
