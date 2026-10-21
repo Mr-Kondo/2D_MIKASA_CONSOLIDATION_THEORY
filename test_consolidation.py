@@ -154,11 +154,12 @@ class ConsolidationTests(unittest.TestCase):
         self.assertTrue(np.isfinite(simulator.run_simulation(verbose=False)).all())
 
     def test_invalid_inputs_are_rejected_at_boundary(self):
-        cases = {"length": (0, np.nan, np.inf), "depth": (-1, np.inf),
-                 "nx": (1, 2.5, True), "nz": (1, 3.0), "cv": (-1, np.nan, np.inf),
-                 "E": (0, np.inf), "dt": (0, np.nan, np.inf), "total_time": (0, np.inf),
-                 "load_width": (0, np.nan), "load_intensity": (-1, np.nan),
-                 "poisson_ratio": (-0.1, 0.5, np.nan), "device": ("cuda", "mps", "mlx")}
+        cases = {"length": (0, np.nan, np.inf, "a", None), "depth": (-1, np.inf),
+                 "nx": (1, 2.5, True), "nz": (1, 3.0), "cv": (-1, np.nan, np.inf, None),
+                 "E": (0, np.inf), "dt": (0, np.nan, np.inf, True), "total_time": (0, np.inf),
+                 "load_width": (0, np.nan), "load_intensity": (-1, np.nan, True),
+                 "poisson_ratio": (-0.1, 0.5, np.nan, "0.3", True),
+                 "device": ("cuda", "mps", "mlx")}
         for parameter, values in cases.items():
             for value in values:
                 with self.subTest(parameter=parameter, value=value), self.assertRaises(ValueError):

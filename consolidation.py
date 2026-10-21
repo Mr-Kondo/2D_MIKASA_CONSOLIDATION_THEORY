@@ -26,11 +26,19 @@ def is_negligible_field(values, reference):
     return bool(np.max(np.abs(values)) < 1e-9 * reference)
 
 
+def _require_real(name, value):
+    """bool・文字列・Noneなど、数値でない値をValueErrorで弾く。"""
+    if isinstance(value, bool) or not isinstance(value, (int, float, np.integer, np.floating)):
+        raise ValueError(f"{name} must be a real number")
+
+
 def _validate_scalars(positive, nonnegative):
     for name, value in positive.items():
+        _require_real(name, value)
         if not math.isfinite(value) or value <= 0:
             raise ValueError(f"{name} must be finite and > 0")
     for name, value in nonnegative.items():
+        _require_real(name, value)
         if not math.isfinite(value) or value < 0:
             raise ValueError(f"{name} must be finite and >= 0")
 
@@ -69,6 +77,7 @@ class ConsolidationSimulator:
         nonnegative = dict(cv=cv, load_intensity=load_intensity)
         _validate_scalars(positive, nonnegative)
         _validate_grid(nx, nz)
+        _require_real("poisson_ratio", poisson_ratio)
         if not 0 <= poisson_ratio < 0.5:
             raise ValueError("poisson_ratio must satisfy 0 <= value < 0.5")
         if device not in ("auto", "cpu"):

@@ -92,7 +92,7 @@ $$
 ## APIと制約
 
 - `nx`, `nz`: 2以上の整数。`length`, `depth`, `E`, `dt`, `total_time`, `load_width` は有限の正数です。
-- `cv`, `load_intensity`: 有限の非負数。`0 <= poisson_ratio < 0.5` を指定します。不正な入力には `ValueError`、演算範囲を超えた条件には `FloatingPointError` または `ValueError` が発生します。
+- `cv`, `load_intensity`: 有限の非負数。`0 <= poisson_ratio < 0.5` を指定します。数値でない値（文字列・`None`）と `True`/`False` は数値引数として受理しません。不正な入力には `ValueError`、演算範囲を超えた条件には `FloatingPointError` または `ValueError` が発生します。
 - `device`: `"auto"` または `"cpu"`。どちらもCPUを使用します。従来無視されていた `"mps"`, `"cuda"`, `"mlx"` は明示的に拒否します。
 - `run_simulation()`: 現在の水圧から `total_time` だけ進め、形状 `(nz, nx)` の沈下配列を返します。再度呼ぶと、さらに同じ時間だけ進みます。
 - `get_current_state()`: 沈下、水平変位、水圧、鉛直ひずみの順で、NumPy配列のコピーを返します。
