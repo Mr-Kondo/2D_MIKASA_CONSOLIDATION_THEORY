@@ -4,6 +4,7 @@
 
 - [theory.md](theory.md) — 有限ひずみ圧密の理論と数値解法の解説。
 - [references.md](references.md) — 参考論文と資料の一覧、用途、確認した範囲。
+- [validation.md](validation.md) — GUI・OSの確認範囲と、Apple M5でのGPU併用実験。
 
 本文の数値・記号・式は、リポジトリの実装（`finite_strain.py`、`consolidation.py`）に合わせています。実装を変えたときは、この文書も更新してください。
 

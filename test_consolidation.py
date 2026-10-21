@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 import warnings
 
 import matplotlib
@@ -227,6 +228,17 @@ class ConsolidationTests(unittest.TestCase):
                 simulator.plot_results(save_path=Path(directory) / "missing" / "figure.png", show=False, dpi=30)
         self.assertEqual(plt.get_fignums(), [])
 
+    def test_plot_display_requires_explicit_opt_in(self):
+        for cls in (ConsolidationSimulator, FiniteStrainConsolidation):
+            simulator = cls(nx=3, nz=4, total_time=0.1)
+            with self.subTest(model=cls.__name__), \
+                    patch.object(plt, "get_backend", return_value="MacOSX"), \
+                    patch.object(plt, "show", side_effect=RuntimeError("display requested")):
+                simulator.plot_results(dpi=30)
+                with self.assertRaisesRegex(RuntimeError, "display requested"):
+                    simulator.plot_results(show=True, dpi=30)
+            self.assertEqual(plt.get_fignums(), [])
+
 
 class FiniteStrainTests(unittest.TestCase):
     """有限ひずみ（三笠／Gibson 系）実装の検証。"""
@@ -396,7 +408,9 @@ class FiniteStrainTests(unittest.TestCase):
             self.assertLess(abs(deviation), 0.5)
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "comparison.png"
-            plot_comparison(save_path=path, show=False, dpi=30)
+            with patch.object(plt, "get_backend", return_value="MacOSX"), \
+                    patch.object(plt, "show", side_effect=RuntimeError("display requested")):
+                plot_comparison(save_path=path, dpi=30)
             self.assertTrue(path.is_file())
         self.assertEqual(plt.get_fignums(), [])
 

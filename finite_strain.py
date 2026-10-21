@@ -477,7 +477,7 @@ class FiniteStrainConsolidation:
             print(f"Consolidation degree (pressure integral): {self.get_consolidation_degree():.1f}%")
         return self.disp_z.copy()
 
-    def plot_results(self, save_path=None, show=True, figsize=(18, 5), dpi=300):
+    def plot_results(self, save_path=None, show=False, figsize=(18, 5), dpi=300):
         x = np.linspace(0, self.length, self.nx)
         z = self.d_zeta * (np.cumsum(1.0 + self.e, axis=0) - 0.5 * (1.0 + self.e))
         fig, axes = plt.subplots(1, 3, figsize=figsize)
