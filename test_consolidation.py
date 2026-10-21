@@ -1,5 +1,6 @@
 import contextlib
 import io
+import math
 import os
 from pathlib import Path
 import subprocess
@@ -15,8 +16,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from consolidation import ConsolidationSimulator, is_negligible_field
+from finite_strain import FiniteStrainConsolidation
 from Mikasa import MikasaConsolidationSimulator
-from Terzaghi import TerzaghiConsolidationSimulator
+from Terzaghi import (TerzaghiConsolidationSimulator, matched_cv, matched_modulus,
+                      plot_comparison, run_pair, terzaghi_degree)
+
+#: 小ひずみ極限の一致条件。自重と有限ひずみの影響が小さくなるよう荷重を初期有効応力の
+#: 1e-6 倍に取り、線形モデルと同じ ``c_v`` を与える ``k0`` を圧縮則から逆算する。
+SMALL_STRAIN_CV = 4.0
+SMALL_STRAIN = dict(depth=1.0, length=1.0, nx=1, nz=41, e0=1.0, Cc=0.005, Ck=0.05,
+                    sigma_ref=1.0e6, sigma_top=1.0e6, load_intensity=1.0, load_width=1.0e9,
+                    k0=SMALL_STRAIN_CV * 9.81 * 0.005 / (2.0 * 1.0e6 * math.log(10.0)))
 
 
 class ConsolidationTests(unittest.TestCase):
@@ -120,14 +130,12 @@ class ConsolidationTests(unittest.TestCase):
         self.assertAlmostEqual(simulator.get_consolidation_degree(), 100)
 
     def test_zero_load_is_finite_and_reset_restores_state(self):
-        for simulator_type in (MikasaConsolidationSimulator, TerzaghiConsolidationSimulator):
-            with self.subTest(simulator=simulator_type.__name__):
-                simulator = simulator_type(nx=4, nz=4, load_intensity=0, total_time=0.1)
-                with contextlib.redirect_stdout(io.StringIO()):
-                    simulator.run_simulation()
-                for field in simulator.get_current_state():
-                    np.testing.assert_array_equal(field, 0)
-                self.assertEqual(simulator.get_consolidation_degree(), 100)
+        simulator = TerzaghiConsolidationSimulator(nx=4, nz=4, load_intensity=0, total_time=0.1)
+        with contextlib.redirect_stdout(io.StringIO()):
+            simulator.run_simulation()
+        for field in simulator.get_current_state():
+            np.testing.assert_array_equal(field, 0)
+        self.assertEqual(simulator.get_consolidation_degree(), 100)
         simulator = ConsolidationSimulator(nx=5, nz=5, total_time=0.1)
         initial = simulator.get_current_state()
         simulator.run_simulation(verbose=False)
@@ -217,6 +225,179 @@ class ConsolidationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             with self.assertRaises(FileNotFoundError):
                 simulator.plot_results(save_path=Path(directory) / "missing" / "figure.png", show=False, dpi=30)
+        self.assertEqual(plt.get_fignums(), [])
+
+
+class FiniteStrainTests(unittest.TestCase):
+    """有限ひずみ（三笠／Gibson 系）実装の検証。"""
+
+    @staticmethod
+    def _reference_void_ratio(simulator):
+        """自重と有効応力の釣り合いを RK4 で独立に積分した参照解 ``e(σ')``。"""
+        def void_of(sigma):
+            return simulator.e0 - simulator.Cc * math.log10(sigma / simulator.sigma_ref)
+
+        step = 1e-4
+        zeta, sigma, points = 0.0, simulator.sigma_top + simulator.load_intensity, []
+        while zeta < simulator.d_zeta * simulator.nz:
+            points.append((zeta, void_of(sigma)))
+            slopes = [simulator.gamma_w * (simulator.gs + void_of(sigma))]
+            for offset, weight in ((0.5, 1.0), (0.5, 1.0), (1.0, 1.0)):
+                slopes.append(simulator.gamma_w * (
+                    simulator.gs + void_of(sigma + weight * offset * step * slopes[-1])))
+            sigma += step / 6.0 * (slopes[0] + 2.0 * slopes[1] + 2.0 * slopes[2] + slopes[3])
+            zeta += step
+        points = np.array(points)
+        centers = simulator.d_zeta * (np.arange(1, simulator.nz + 1) - 0.5)
+        return np.interp(centers, points[:, 0], points[:, 1])
+
+    def test_no_load_keeps_the_self_weight_equilibrium(self):
+        """無載荷では自重と釣り合った初期状態が保たれ、見かけの圧密が起きない。"""
+        for nz in (4, 16, 64):
+            with self.subTest(nz=nz):
+                simulator = FiniteStrainConsolidation(nx=2, nz=nz, load_intensity=0.0,
+                                                      total_time=0.1)
+                np.testing.assert_allclose(simulator.u, 0.0, atol=1e-9)
+                with contextlib.redirect_stdout(io.StringIO()):
+                    simulator.run_simulation()
+                settlement, horizontal, pressure, strain = simulator.get_current_state()
+                self.assertLess(np.abs(settlement).max(), 1e-12)
+                self.assertLess(np.abs(pressure).max(), 1e-9)
+                self.assertLess(np.abs(strain).max(), 1e-12)
+                np.testing.assert_array_equal(horizontal, 0)
+                self.assertEqual(simulator.get_consolidation_degree(), 100.0)
+
+    def test_reset_restores_the_initial_state(self):
+        simulator = FiniteStrainConsolidation(nx=3, nz=5, total_time=50.0, dt=5.0)
+        initial = simulator.get_current_state()
+        simulator.run_simulation(verbose=False)
+        self.assertGreater(float(np.abs(simulator.disp_z).max()), 0.0)
+        simulator.reset()
+        self.assertEqual(simulator.split_count, 0)
+        for actual, expected in zip(simulator.get_current_state(), initial):
+            np.testing.assert_array_equal(actual, expected)
+        self.assertEqual(simulator.get_consolidation_degree(), 0.0)
+
+    def test_steady_state_matches_independent_ode_integration(self):
+        """最終状態の ``e`` プロファイルが独立積分と一致し、格子細分化で収束する。"""
+        errors = []
+        for nz in (11, 21, 41, 81):
+            with self.subTest(nz=nz):
+                simulator = FiniteStrainConsolidation(nx=1, nz=nz, total_time=3650.0, dt=5.0)
+                simulator.run_simulation(verbose=False)
+                self.assertLess(float(np.abs(simulator.u).max()), 1e-6)
+                errors.append(float(np.abs(
+                    self._reference_void_ratio(simulator) - simulator.e[:, 0]).max()))
+        self.assertLess(errors[-1], 5e-6)
+        for coarse, fine in zip(errors, errors[1:]):
+            self.assertLess(fine, 0.5 * coarse)
+
+    def test_small_strain_limit_matches_terzaghi_series(self):
+        for factor in (0.1, 0.2, 0.4):
+            with self.subTest(time_factor=factor):
+                simulator = FiniteStrainConsolidation(
+                    total_time=factor / SMALL_STRAIN_CV, dt=0.0005, **SMALL_STRAIN)
+                simulator.run_simulation(verbose=False)
+                deviation = simulator.get_consolidation_degree() - terzaghi_degree(factor)
+                self.assertLess(abs(deviation), 0.5)
+
+    def test_time_step_refinement_reduces_the_deviation_from_terzaghi(self):
+        reference = terzaghi_degree(0.4)
+        errors = []
+        for step in (0.001, 0.00025):
+            with self.subTest(dt=step):
+                simulator = FiniteStrainConsolidation(total_time=0.4 / SMALL_STRAIN_CV,
+                                                      dt=step, **dict(SMALL_STRAIN, nz=21))
+                simulator.run_simulation(verbose=False)
+                self.assertEqual(simulator.split_count, 0)
+                errors.append(abs(simulator.get_consolidation_degree() - reference))
+        self.assertLess(errors[1], errors[0])
+        self.assertLess(errors[1], 0.15)
+
+    def test_uniform_load_two_dimensional_run_reproduces_the_vertical_solution(self):
+        parameters = dict(depth=2.0, length=2.0, nz=21, total_time=100.0, dt=5.0,
+                          load_width=60.0)
+        vertical = FiniteStrainConsolidation(nx=1, **parameters)
+        lateral = FiniteStrainConsolidation(nx=5, **parameters)
+        vertical.run_simulation(verbose=False)
+        lateral.run_simulation(verbose=False)
+        np.testing.assert_allclose(lateral.disp_z[:, 2], vertical.disp_z[:, 0], rtol=2e-4)
+        np.testing.assert_allclose(lateral.e[:, 2], vertical.e[:, 0], rtol=2e-4, atol=2e-4)
+        np.testing.assert_allclose(lateral.u[:, 2], vertical.u[:, 0], atol=1e-6)
+
+    def test_two_dimensional_run_converges_toward_the_linear_model(self):
+        deviations = []
+        for nodes in (11, 21):
+            with self.subTest(nodes=nodes):
+                finite_parameters = dict(depth=1.0, length=2.0, nx=nodes, nz=nodes, e0=1.0,
+                                         Cc=0.005, Ck=0.05, sigma_ref=1.0e6, sigma_top=1.0e6,
+                                         load_intensity=1.0, load_width=0.4, dt=0.0005)
+                finite_parameters["k0"] = SMALL_STRAIN_CV * 9.81 * finite_parameters["Cc"] / (
+                    (1.0 + finite_parameters["e0"]) * finite_parameters["sigma_ref"]
+                    * math.log(10.0))
+                largest = 0.0
+                for factor in (0.1, 0.4):
+                    duration = factor / SMALL_STRAIN_CV
+                    finite = FiniteStrainConsolidation(total_time=duration,
+                                                       **finite_parameters)
+                    finite.run_simulation(verbose=False)
+                    linear = ConsolidationSimulator(
+                        cv=SMALL_STRAIN_CV, E=1.0, poisson_ratio=0.3, total_time=duration,
+                        **{name: finite_parameters[name] for name in
+                           ("length", "depth", "nx", "nz", "load_intensity", "load_width", "dt")})
+                    linear.run_simulation(verbose=False)
+                    difference = (finite.get_consolidation_degree()
+                                  - linear.get_consolidation_degree())
+                    self.assertLess(abs(difference), 3.0)
+                    largest = max(largest, abs(difference))
+                deviations.append(largest)
+        self.assertLess(deviations[1], deviations[0])
+
+    def test_invalid_inputs_are_rejected(self):
+        cases = {"length": (0.0, np.nan), "depth": (-1.0,), "nx": (0, 2.5, True),
+                 "nz": (0, 1, 3.0), "e0": (0.0, np.nan), "Cc": (0.0, np.inf),
+                 "Ck": (0.0, -1.0), "k0": (0.0,), "sigma_ref": (0.0,), "sigma_top": (0.0,),
+                 "specific_gravity": (0.0,), "unit_weight_water": (0.0,),
+                 "load_width": (0.0,), "load_intensity": (-1.0, np.nan),
+                 "dt": (0.0, np.inf), "total_time": (0.0,), "max_iterations": (0,),
+                 "max_splits": (0,), "tolerance": (0.0, np.nan)}
+        for parameter, values in cases.items():
+            for value in values:
+                with self.subTest(parameter=parameter, value=value), self.assertRaises(ValueError):
+                    FiniteStrainConsolidation(**{parameter: value})
+
+    def test_non_convergence_is_reported_instead_of_clipped(self):
+        simulator = FiniteStrainConsolidation(nx=2, nz=4, total_time=1.0, dt=1.0,
+                                              max_iterations=1, max_splits=1)
+        with self.assertRaises(RuntimeError):
+            simulator.run_simulation(verbose=False)
+
+    def test_plot_results_renders_one_and_two_dimensional_fields(self):
+        for nx, load in ((1, 50.0), (5, 50.0), (3, 0.0)):
+            with self.subTest(nx=nx, load=load), tempfile.TemporaryDirectory() as directory:
+                simulator = FiniteStrainConsolidation(nx=nx, nz=5, total_time=50.0, dt=5.0,
+                                                      load_intensity=load)
+                simulator.run_simulation(verbose=False)
+                path = Path(directory) / "finite.png"
+                simulator.plot_results(save_path=path, show=False, dpi=30)
+                self.assertTrue(path.is_file())
+                self.assertEqual(plt.get_fignums(), [])
+
+    def test_module_aliases_point_at_the_finite_strain_model(self):
+        self.assertIs(MikasaConsolidationSimulator, FiniteStrainConsolidation)
+
+    def test_terzaghi_comparison_helpers_agree_and_save_a_figure(self):
+        self.assertAlmostEqual(matched_cv(), 4.008986074244476, places=9)
+        self.assertAlmostEqual(matched_modulus(), 68419.67133468021, places=6)
+        self.assertAlmostEqual(terzaghi_degree(0.4), 69.78819062267267, places=8)
+        terzaghi, mikasa = run_pair(0.4)
+        for simulator in (terzaghi, mikasa):
+            deviation = simulator.get_consolidation_degree() - terzaghi_degree(0.4)
+            self.assertLess(abs(deviation), 0.5)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "comparison.png"
+            self.assertTrue(plot_comparison(save_path=path, show=False, dpi=30))
+            self.assertTrue(path.is_file())
         self.assertEqual(plt.get_fignums(), [])
 
 
