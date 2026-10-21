@@ -134,7 +134,7 @@ MPLBACKEND=Agg uv run --locked Terzaghi.py
 - Windows・Linux・GPU での実行、実地盤への適合性、設計精度の検証。
 - 三笠有限ひずみ理論の再実装、変形と水圧の連成、せん断・水平力の釣合い。
 - 時間変動荷重、不均一な透水性、間隙比依存の材料則、大変形。
-- GitHub Actions などの CI は未設定（Issue #11）。上の検証はローカル実行のみ。
+- CI は Linux・Python 3.13/3.15 の unittest のみ。macOS・Windows・GPU・実地盤は未検証。
 - ライセンス表記は未設定（ユーザーの判断が必要）。
 
 ## 追記（Issue #7〜#11）
@@ -149,7 +149,7 @@ MPLBACKEND=Agg uv run --locked Terzaghi.py
   時間刻みの2次収束テストは、締めた上限に掛からない刻み（0.05 / 0.025 / 0.0125）に変更した。
 - #9（修正済み）: `_require_real` で `bool`・文字列・`None` を `ValueError` にした。境界検証テストの表に入力例を追加。
 - #10（修正済み）: `show_if_interactive()` を追加し、非対話バックエンド（Agg など）では `plt.show()` を呼ばない。
-- #11: CI 未設定（下記の残課題）。
+- #11（修正済み）: `.github/workflows/tests.yml` を追加。Linux 上の Python 3.13・3.15 でテストを実行し、PR #17 の時点で両方成功した。
 
 ## 後片付け
 
