@@ -1,7 +1,7 @@
 """Paper-specific self-weight columns sharing the production finite-volume solver.
 
 Takada (1983) excludes the uncompressed cap and imposes its yield stress at
-the top of the active column. No fitting to settlement observations is used.
+the top of the active column. No additional fitting to observations is performed here.
 """
 
 import math
@@ -62,8 +62,7 @@ def sample_column(model, time_day, material_positions):
     displacement = np.r_[model.disp_z[:, 0], 0]
     settlement = np.interp(material_positions, edges, displacement)
     pressure = np.interp(material_positions, np.r_[0, centers, edges[-1]], np.r_[0, model.u[:, 0], model.u[-1, 0]])
-    depth = np.interp(material_positions, edges, np.r_[0, np.cumsum(1 + model.e[:, 0]) * model.d_zeta])
-    return {"time_day": time_day, "settlement_m": settlement, "pressure_kpa": pressure, "depth_m": depth}
+    return {"time_day": time_day, "settlement_m": settlement, "pressure_kpa": pressure}
 
 
 def simulate(parameters, resolution, times_day, positions):
