@@ -88,15 +88,19 @@ class ConsolidationSimulator:
         _require_real("poisson_ratio", poisson_ratio)
         if not 0 <= poisson_ratio < 0.5:
             raise ValueError("poisson_ratio must satisfy 0 <= value < 0.5")
-        if device not in ("auto", "cpu"):
-            raise ValueError("device must be 'auto' or 'cpu'; GPU backends are not supported")
+        if device not in ("auto", "cpu", "cuda"):
+            raise ValueError("device must be 'auto', 'cpu' or 'cuda'")
+        self._xp = np
+        if device == "cuda":
+            from .cuda import require_cuda
+            self._xp = require_cuda()
 
         self.length, self.depth = length, depth
         self.nx, self.nz = nx, nz
         self.dx, self.dz = length / (nx - 1), depth / (nz - 1)
         self.cv, self.E, self.nu = cv, E, poisson_ratio
         self.load_intensity, self.load_width = load_intensity, load_width
-        self.device, self.total_time = "cpu", total_time
+        self.device, self.total_time = ("cpu" if device == "auto" else device), total_time
         if self.dx == 0 or self.dz == 0:
             raise ValueError("grid spacing is too small")
         with np.errstate(over="raise", divide="raise", invalid="raise"):
@@ -113,6 +117,8 @@ class ConsolidationSimulator:
         self.nt = max(1, math.ceil(total_time / step_limit))
         self.dt = total_time / self.nt
         self._setup_solver()
+        self._modes = tuple(self._xp.asarray(field) for field in
+                            (self._x_basis, self._z_basis, self._weights, self._decay))
         self.total_stress = self._strip_stress()
         self.reset()
 
@@ -155,14 +161,18 @@ class ConsolidationSimulator:
     def run_simulation(self, verbose: bool = True) -> np.ndarray:
         """現在の水圧からtotal_timeだけ進める。返す配列は(nz, nx)の沈下量[m]。"""
         start = time.perf_counter()
-        coefficients = self._z_basis.T @ (self.u[1:] * self._weights) @ self._x_basis
-        pressure = self._z_basis @ (coefficients * self._decay) @ self._x_basis.T
-        self.u = np.vstack([np.zeros(self.nx), pressure / self._weights])
+        x_basis, z_basis, weights, decay = self._modes
+        coefficients = z_basis.T @ (self._xp.asarray(self.u[1:]) * weights) @ x_basis
+        pressure = z_basis @ (coefficients * decay) @ x_basis.T / weights
+        if self.device == "cuda":
+            pressure = self._xp.asnumpy(pressure)
+        self.u = np.vstack([np.zeros(self.nx), pressure])
         if not np.isfinite(self.u).all():
             raise FloatingPointError("non-finite pore pressure; no clipping or substitution was applied")
         self._update_displacement()
         if verbose:
-            print(f"Simulation time: {time.perf_counter() - start:.3f} seconds (NumPy CPU)")
+            backend = "NumPy CPU" if self.device == "cpu" else "CUDA float64 modes"
+            print(f"Simulation time: {time.perf_counter() - start:.3f} seconds ({backend})")
             print(f"Crank-Nicolson: {self.nt} steps, dt={self.dt:.6g} day (evaluated in eigenmodes)")
             print(f"Surface center settlement: {self.disp_z[0, self.nx // 2] * 1000:.2f} mm")
             print(f"Remaining excess pore pressure: {self.u.max():.2f} kPa")

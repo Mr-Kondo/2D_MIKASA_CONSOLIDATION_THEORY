@@ -102,6 +102,7 @@ class FiniteStrainConsolidation:
         max_iterations: int = 60,
         max_splits: int = 8,
         tolerance: float = 1e-9,
+        device: str = "cpu",
     ):
         positive = dict(length=length, depth=depth, e0=e0, Cc=Cc, Ck=Ck, k0=k0,
                         sigma_ref=sigma_ref, sigma_top=sigma_top,
@@ -117,6 +118,13 @@ class FiniteStrainConsolidation:
                 raise ValueError(f"{name} must be an integer >= 1")
         if nz < 2:
             raise ValueError("nz must be an integer >= 2")
+        if device not in ("cpu", "cuda"):
+            raise ValueError("device must be 'cpu' or 'cuda'")
+        self.device = device
+        self._batch_solve = _tridiagonal_batch
+        if device == "cuda":
+            from .cuda import make_tridiagonal_solver
+            self._batch_solve = make_tridiagonal_solver()
 
         self.length, self.depth, self.nx, self.nz = length, depth, nx, nz
         self.e0, self.Cc, self.Ck, self.k0 = e0, Cc, Ck, k0
@@ -342,14 +350,14 @@ class FiniteStrainConsolidation:
         return lower, diag, upper
 
     def _solve_vertical(self, lower, diag, upper, rhs):
-        if self.nx == 1:
+        if self.nx == 1 and self.device == "cpu":
             solution = _tridiagonal(lower[:, 0].tolist(), diag[:, 0].tolist(),
                                     upper[:, 0].tolist(), rhs[:, 0].tolist())
             return np.array(solution)[:, None]
-        return _tridiagonal_batch(lower, diag, upper, rhs)
+        return self._batch_solve(lower, diag, upper, rhs)
 
     def _solve_horizontal(self, lower, diag, upper, rhs):
-        return _tridiagonal_batch(lower.T, diag.T, upper.T, rhs.T).T
+        return self._batch_solve(lower.T, diag.T, upper.T, rhs.T).T
 
     def _newton_solve(self, residual, jacobian, solve, initial, threshold):
         """1方向の非線形陰的方程式を Newton 法で解く（残差が減るまで半減する）。
@@ -467,7 +475,8 @@ class FiniteStrainConsolidation:
         if not np.isfinite(self.u).all():
             raise FloatingPointError("non-finite pore pressure; no clipping was applied")
         if verbose:
-            print(f"Simulation time: {time.perf_counter() - start:.3f} seconds (NumPy CPU)")
+            backend = "NumPy CPU" if self.device == "cpu" else "hybrid CUDA float64"
+            print(f"Simulation time: {time.perf_counter() - start:.3f} seconds ({backend})")
             print(f"Backward Euler: {self.nt} steps, dt={self.dt:.6g} day, "
                   f"{self.split_count} automatic subdivisions")
             print(f"Surface center settlement: {self.disp_z[0, self.nx // 2] * 1000:.2f} mm")
@@ -517,10 +526,3 @@ class FiniteStrainConsolidation:
                 show_if_interactive()
         finally:
             plt.close(fig)
-
-
-def run_example(save_path):
-    simulator = FiniteStrainConsolidation()
-    simulator.run_simulation()
-    simulator.plot_results(save_path=save_path)
-    return simulator
