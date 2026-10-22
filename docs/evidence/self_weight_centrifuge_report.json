@@ -1,0 +1,149 @@
+{
+  "source": {
+    "url": "https://doi.org/10.2208/jscej1969.1983.334_113",
+    "sha256": "28e7f4e4a327250c0c461384a5741a2a169175c6783eaa7205985aaea7395331",
+    "pages": "PDF 3 section 3/Table 1/Fig.2; PDF 4 section 4/Fig.9 (printed 115-116)",
+    "image_size": [
+      1208,
+      1800
+    ],
+    "axes": {
+      "x": [
+        638,
+        1106
+      ],
+      "cv_t_m2": [
+        0,
+        8
+      ],
+      "y": [
+        1397,
+        1628
+      ],
+      "settlement_m": [
+        0,
+        4
+      ]
+    },
+    "read_half_width_x_px": 4,
+    "read_half_width_y_px": 3,
+    "case": {
+      "volume_ratio": 5,
+      "specific_gravity": 2.65,
+      "Cc": 0.8,
+      "cv": 1,
+      "yield_stress": 0.0980665
+    },
+    "assumptions": [
+      "cv=1 m2/day normalizes the published cv*t axis; not an identified soil parameter",
+      "Upper uncompressed cap excluded as specified in section 3; top drained, bottom sealed",
+      "Gs=2.65 from Table 1 cap relation; gamma_w=1 tf/m3",
+      "Final labels rounded/truncated to 0.01 m; allowance 0.01 m; graph ranges are not confidence intervals"
+    ],
+    "centrifuge_case": {
+      "height": 10,
+      "volume_ratio": 4.2,
+      "specific_gravity": 2.67,
+      "Cc": 0.71,
+      "cv": 0.00032,
+      "yield_stress": 0.40854413991525806
+    },
+    "centrifuge_axes": {
+      "x": [
+        90,
+        555
+      ],
+      "time_1e4_min": [
+        10,
+        10000
+      ],
+      "y": [
+        909,
+        1156
+      ],
+      "degree_percent": [
+        0,
+        100
+      ]
+    },
+    "centrifuge_pages": "PDF 5 Eq.26; PDF 7 Table 3/section 6; PDF 8 Table 4/Fig.22",
+    "centrifuge_assumptions": [
+      "Single-drained Nanko98 f0=4.2 only; filled markers are measured settlement degree",
+      "100g, model H=0.1 m mapped to prototype H=10 m, tp=10000 tm, Sp=100 Sm",
+      "Initial cv was derived in the original paper from the early settlement of this experiment; this is not independent prediction",
+      "Use both published delta=4 and 8 without fitting or selecting by agreement; cv slope from Eq.26 and bottom final volume ratio",
+      "Pressure measurements not provided for this selected case; void-ratio isochrones at different degrees are not compared as simultaneous measurements"
+    ]
+  },
+  "parameters_by_delta": {
+    "4": {
+      "depth": 9.895226577880683,
+      "e0": 3.2,
+      "sigma_top": 0.40854413991525806,
+      "sigma_ref": 0.40854413991525806,
+      "Cc": 0.71,
+      "cv": 0.00032,
+      "specific_gravity": 2.67,
+      "unit_weight_water": 9.80665,
+      "cv_log_slope": 0.42832292077042305
+    },
+    "8": {
+      "depth": 9.895226577880683,
+      "e0": 3.2,
+      "sigma_top": 0.40854413991525806,
+      "sigma_ref": 0.40854413991525806,
+      "Cc": 0.71,
+      "cv": 0.00032,
+      "specific_gravity": 2.67,
+      "unit_weight_water": 9.80665,
+      "cv_log_slope": 0.6424843811556346
+    }
+  },
+  "final_settlement_m": 2.6202459405604754,
+  "reading_half_width_pp": 1.214574898785425,
+  "time_reading_factor": 1.04557415283897,
+  "runs": {
+    "delta4_nz81_time1": {
+      "rmse_pp": 3.3922231398214873,
+      "max_abs_pp": 6.807449932490059
+    },
+    "delta4_nz161_time1": {
+      "rmse_pp": 3.4021409326396523,
+      "max_abs_pp": 6.828938444043828
+    },
+    "delta4_nz321_time1": {
+      "rmse_pp": 3.4049030484420992,
+      "max_abs_pp": 6.834929236895491
+    },
+    "delta4_nz321_time2": {
+      "rmse_pp": 3.3473045214460866,
+      "max_abs_pp": 6.694035722858459
+    },
+    "delta8_nz81_time1": {
+      "rmse_pp": 2.6368222207255356,
+      "max_abs_pp": 5.273427069589047
+    },
+    "delta8_nz161_time1": {
+      "rmse_pp": 2.633546689709217,
+      "max_abs_pp": 5.260464289765281
+    },
+    "delta8_nz321_time1": {
+      "rmse_pp": 2.632317224124655,
+      "max_abs_pp": 5.256892021801576
+    },
+    "delta8_nz321_time2": {
+      "rmse_pp": 2.687982351141654,
+      "max_abs_pp": 5.436705055479294
+    }
+  },
+  "convergence_by_delta": {
+    "4": {
+      "max_grid_change_pp": 0.006273840147230203,
+      "max_time_change_pp": 0.16907898792004517
+    },
+    "8": {
+      "max_grid_change_pp": 0.012525143842466946,
+      "max_time_change_pp": 0.18775842177085167
+    }
+  }
+}

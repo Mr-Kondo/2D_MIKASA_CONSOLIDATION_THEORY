@@ -5,17 +5,17 @@
 - 物質座標 ``ζ = ∫ dz/(1+e)``（固体体積に基づく座標、地表で0、下向き正）
 - 圧縮則 ``e = e0 - Cc log10(σ'/σ'_ref)``
 - 透水則 ``k = k0 10^{-(e0-e)/Ck}``
-- 自重 ``γ_w (G_s + e)`` による全応力と、排水にともなう再配分
+- 飽和重量による全応力と、浮力を差し引いた ``γ_w (G_s - 1)`` による有効自重
 - 移動表面（沈下）と、固体体積一定の座標
 
 支配方程式（鉛直一次元、``u`` は過剰間隙水圧）:
 
     ∂e/∂t = ∂/∂ζ [ k(e)/(γ_w (1+e)) · ∂u/∂ζ ]
-    ∂u/∂ζ = γ_w (G_s + e) + (1/a_v) ∂e/∂ζ,   a_v = Cc/(σ' ln10)
+    ∂u/∂ζ = γ_w (G_s - 1) + (1/a_v) ∂e/∂ζ,   a_v = Cc/(σ' ln10)
 
 平面ひずみ二次元への拡張では ``εx = 0`` を仮定し、水平方向の流れ
 
-    ∂/∂ξ [ (k/γ_w) ∂u/∂ξ ],   ∂u/∂ξ = ∂σ_v/∂ξ + (1/a_v) ∂e/∂ξ
+    ∂/∂ξ [ (k/γ_w) ∂u/∂ξ ],   ∂u/∂ξ = ∂(σ_v-γ_w z)/∂ξ + (1/a_v) ∂e/∂ξ
 
 を加える。この二次元化は著者による拡張であり、三笠が公表した理論ではない。
 
@@ -151,35 +151,16 @@ class FiniteStrainConsolidation:
     def _permeability_at(self, void_ratio):
         return self.k0 * np.power(10.0, -(self.e0 - void_ratio) / self.Ck)
 
-    def _self_weight_profile(self, d_zeta, sigma_surface):
-        """自重と地表応力で釣り合う間隙比と有効応力の離散プロファイル。
+    def _permeability_derivative(self, void_ratio):
+        return self._permeability_at(void_ratio) * LN10 / self.Ck
 
-        台形則の再帰 ``σ'_i = σ'_{i-1} + γ_w Δζ (G_s + (e_{i-1}+e_i)/2)`` を、
-        ``e`` が ``σ'`` に依存するため各セルで不動点反復して解く。
-        """
-        sigma = np.empty(self.nz)
-        void = np.empty(self.nz)
-        guess = self._void_ratio_at(sigma_surface)
-        for _ in range(64):
-            sigma[0] = sigma_surface + 0.5 * self.gamma_w * d_zeta * (self.gs + guess)
-            updated = self._void_ratio_at(sigma[0])
-            if abs(updated - guess) < 1e-14:
-                guess = updated
-                break
-            guess = updated
-        void[0] = guess
-        for i in range(1, self.nz):
-            e_above = void[i - 1]
-            guess = self._void_ratio_at(sigma[i - 1])
-            for _ in range(64):
-                sigma[i] = sigma[i - 1] + self.gamma_w * d_zeta * (self.gs + 0.5 * (e_above + guess))
-                updated = self._void_ratio_at(sigma[i])
-                if abs(updated - guess) < 1e-14:
-                    guess = updated
-                    break
-                guess = updated
-            void[i] = guess
-        return void
+    def _self_weight_profile(self, d_zeta, sigma_surface):
+        """浮力を含む釣合い ``σ'=σ'_surface+γ_w(G_s-1)ζ``。"""
+        centers = d_zeta * (np.arange(self.nz) + 0.5)
+        sigma = sigma_surface + self.gamma_w * (self.gs - 1) * centers
+        if np.any(sigma <= 0):
+            raise ValueError("self-weight equilibrium requires positive effective stress")
+        return self._void_ratio_at(sigma)
 
     def _initial_solid_thickness(self):
         """初期層厚 ``depth`` を与える固体厚 ``ζ`` を二分法で求める。"""
@@ -219,7 +200,7 @@ class FiniteStrainConsolidation:
     def _vertical_weight(self, void_ratio):
         """地表からセル中心までの土の重さ ``γ_w ∫ (G_s + e) dζ``。
 
-        ``_self_weight_profile`` の台形則と同じ離散化にする（初期状態で ``u = σ_load``）。
+        静水圧 ``γ_w ∫(1+e)dζ`` を含む全重量で、有効自重とは区別する。
         """
         weight = self.gamma_w * (self.gs + void_ratio)
         return self.d_zeta * (np.cumsum(weight, axis=0) - 0.5 * weight)
@@ -227,8 +208,13 @@ class FiniteStrainConsolidation:
     def _total_stress(self, void_ratio):
         return self.sigma_top + self.sigma_load + self._vertical_weight(void_ratio)
 
+    def _driving_stress(self):
+        """全応力から現在の静水圧を差し引いた、過剰水圧を生む応力。"""
+        centers = self.d_zeta * (np.arange(self.nz) + 0.5)
+        return self.sigma_top + self.sigma_load + self.gamma_w * (self.gs - 1) * centers[:, None]
+
     def _pore_pressure(self, void_ratio):
-        return self._total_stress(void_ratio) - self._effective_stress_at(void_ratio)
+        return self._driving_stress() - self._effective_stress_at(void_ratio)
 
     def _face_values(self, void_ratio):
         face = np.empty((self.nz + 1, self.nx))
@@ -262,21 +248,21 @@ class FiniteStrainConsolidation:
         flux = self._vertical_flux(void_ratio)
         return (flux[1:] - flux[:-1]) / self.d_zeta
 
-    def _horizontal_flux(self, void_ratio, sigma_total):
+    def _horizontal_flux(self, void_ratio, driving_stress):
         """面での ``G = (k/γ_w) ∂u/∂ξ``。端は非排水で ``G=0``。"""
         face = 0.5 * (void_ratio[:, :-1] + void_ratio[:, 1:])
         sigma = self._effective_stress_at(face)
         perm = self._permeability_at(face)
-        gradient = ((sigma_total[:, 1:] - sigma_total[:, :-1])
+        gradient = ((driving_stress[:, 1:] - driving_stress[:, :-1])
                     + (sigma * LN10 / self.Cc) * (void_ratio[:, 1:] - void_ratio[:, :-1])) / self.d_xi
         flux = np.zeros((self.nz, self.nx + 1))
         flux[:, 1:-1] = (perm / self.gamma_w) * gradient
         return flux
 
-    def _horizontal_divergence(self, void_ratio, sigma_total):
+    def _horizontal_divergence(self, void_ratio, driving_stress):
         if self.nx == 1:
             return np.zeros_like(void_ratio)
-        flux = self._horizontal_flux(void_ratio, sigma_total)
+        flux = self._horizontal_flux(void_ratio, driving_stress)
         return (flux[:, 1:] - flux[:, :-1]) / self.d_xi
 
     # ---------------------------------------------------------------- 陰的ソルバー
@@ -294,20 +280,21 @@ class FiniteStrainConsolidation:
         face = self._face_values(void_ratio)
         perm = self._permeability_at(face)
         conductivity = perm / (self.gamma_w * (1.0 + face))
-        d_conductivity = conductivity * (LN10 / self.Ck - 1.0 / (1.0 + face))
+        d_conductivity = (self._permeability_derivative(face) - perm / (1.0 + face)) \
+            / (self.gamma_w * (1.0 + face))
         pressure = self._pore_pressure(void_ratio)
         sigma = self._effective_stress_at(void_ratio)
         stress_per_void = LN10 / (self.Cc * self.d_zeta)  # ∂σ'/∂e = -σ' × この値
         gradient = (pressure[1:] - pressure[:-1]) / self.d_zeta
         face_below = np.zeros_like(face)
         face_above = np.zeros_like(face)
-        face_below[0] = conductivity[0] * (self.gamma_w + 2.0 * sigma[0] * stress_per_void)
+        face_below[0] = conductivity[0] * 2.0 * sigma[0] * stress_per_void
         face_below[1:self.nz] = (
             0.5 * d_conductivity[1:self.nz] * gradient
-            + conductivity[1:self.nz] * (0.5 * self.gamma_w + sigma[1:] * stress_per_void))
+            + conductivity[1:self.nz] * sigma[1:] * stress_per_void)
         face_above[1:self.nz] = (
             0.5 * d_conductivity[1:self.nz] * gradient
-            + conductivity[1:self.nz] * (0.5 * self.gamma_w - sigma[:-1] * stress_per_void))
+            - conductivity[1:self.nz] * sigma[:-1] * stress_per_void)
         scale = step / self.d_zeta
         lower = np.zeros((self.nz, self.nx))
         upper = np.zeros((self.nz, self.nx))
@@ -320,11 +307,11 @@ class FiniteStrainConsolidation:
         diag[self.nz - 1] = 1.0 + scale * face_below[self.nz - 1]
         return lower, diag, upper
 
-    def _horizontal_residual(self, previous, void_ratio, sigma_total, step, lagged):
-        return void_ratio - previous - step * (self._horizontal_divergence(void_ratio, sigma_total) + lagged)
+    def _horizontal_residual(self, previous, void_ratio, driving_stress, step, lagged):
+        return void_ratio - previous - step * (self._horizontal_divergence(void_ratio, driving_stress) + lagged)
 
-    def _horizontal_jacobian(self, void_ratio, sigma_total, step):
-        """水平方向 Newton の三重対角ヤコビアン。``σ_v`` の ``e`` 依存は固定する。"""
+    def _horizontal_jacobian(self, void_ratio, driving_stress, step):
+        """水平方向 Newton の三重対角ヤコビアン。静水圧を引いた応力を使う。"""
         lower = np.zeros((self.nz, self.nx))
         upper = np.zeros((self.nz, self.nx))
         diag = np.ones((self.nz, self.nx))
@@ -335,11 +322,11 @@ class FiniteStrainConsolidation:
         perm = self._permeability_at(face)
         beta = sigma * LN10 / self.Cc
         p = perm * beta / (self.gamma_w * self.d_xi**2)
-        d_perm = perm * LN10 / self.Ck
+        d_perm = self._permeability_derivative(face)
         d_beta = -sigma * LN10**2 / self.Cc**2
         d_p = -(d_perm * beta + perm * d_beta) / (self.gamma_w * self.d_xi**2)
         q = d_p * (void_ratio[:, 1:] - void_ratio[:, :-1]) \
-            - (d_perm / (self.gamma_w * self.d_xi**2)) * (sigma_total[:, 1:] - sigma_total[:, :-1])
+            - (d_perm / (self.gamma_w * self.d_xi**2)) * (driving_stress[:, 1:] - driving_stress[:, :-1])
         scale = step / self.d_xi
         lower[:, 1:] = -scale * (p - 0.5 * q)
         upper[:, :-1] = -scale * (p + 0.5 * q)
@@ -394,12 +381,12 @@ class FiniteStrainConsolidation:
         # 差で作られる）より十分大きい床を置き、達成不能な閾値で分割が連鎖しないようにする。
         change = abs(step) * float(np.max(np.abs(
             self._vertical_divergence(previous)
-            + self._horizontal_divergence(previous, self._total_stress(previous)))))
+            + self._horizontal_divergence(previous, self._driving_stress()))))
         threshold = max(self.tolerance * change,
                         1e-13 * max(1.0, float(np.max(np.abs(previous)))))
         for _ in range(self.max_iterations):
-            sigma_total = self._total_stress(current)
-            lagged_horizontal = self._horizontal_divergence(current, sigma_total)
+            driving_stress = self._driving_stress()
+            lagged_horizontal = self._horizontal_divergence(current, driving_stress)
             vertical = self._newton_solve(
                 lambda void: self._vertical_residual(previous, void, step, lagged_horizontal),
                 lambda void: self._vertical_jacobian(void, step),
@@ -409,8 +396,8 @@ class FiniteStrainConsolidation:
             else:
                 lagged_vertical = self._vertical_divergence(vertical)
                 updated = self._newton_solve(
-                    lambda void: self._horizontal_residual(previous, void, sigma_total, step, lagged_vertical),
-                    lambda void: self._horizontal_jacobian(void, sigma_total, step),
+                    lambda void: self._horizontal_residual(previous, void, driving_stress, step, lagged_vertical),
+                    lambda void: self._horizontal_jacobian(void, driving_stress, step),
                     self._solve_horizontal, vertical, threshold)
             difference = float(np.max(np.abs(updated - current)))
             current = updated
@@ -435,7 +422,7 @@ class FiniteStrainConsolidation:
 
     def _update_outputs(self):
         self.sigma_total = self._total_stress(self.e)
-        self.u = self.sigma_total - self._effective_stress_at(self.e)
+        self.u = self._pore_pressure(self.e)
         self.strain_z = (self.e_initial - self.e) / (1.0 + self.e_initial)
         decrement = (self.e_initial - self.e) * self.d_zeta
         self.disp_z = np.cumsum(decrement[::-1], axis=0)[::-1]

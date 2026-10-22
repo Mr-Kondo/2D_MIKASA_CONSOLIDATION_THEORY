@@ -246,23 +246,24 @@ class FiniteStrainTests(unittest.TestCase):
 
     @staticmethod
     def _reference_void_ratio(simulator):
-        """自重と有効応力の釣り合いを RK4 で独立に積分した参照解 ``e(σ')``。"""
-        def void_of(sigma):
-            return simulator.e0 - simulator.Cc * math.log10(sigma / simulator.sigma_ref)
-
-        step = 1e-4
-        zeta, sigma, points = 0.0, simulator.sigma_top + simulator.load_intensity, []
-        while zeta < simulator.d_zeta * simulator.nz:
-            points.append((zeta, void_of(sigma)))
-            slopes = [simulator.gamma_w * (simulator.gs + void_of(sigma))]
-            for offset, weight in ((0.5, 1.0), (0.5, 1.0), (1.0, 1.0)):
-                slopes.append(simulator.gamma_w * (
-                    simulator.gs + void_of(sigma + weight * offset * step * slopes[-1])))
-            sigma += step / 6.0 * (slopes[0] + 2.0 * slopes[1] + 2.0 * slopes[2] + slopes[3])
-            zeta += step
-        points = np.array(points)
+        """静水圧を差し引いた有効応力の厳密な釣合いから参照間隙比を求める。"""
         centers = simulator.d_zeta * (np.arange(1, simulator.nz + 1) - 0.5)
-        return np.interp(centers, points[:, 0], points[:, 1])
+        effective = (simulator.sigma_top + simulator.load_intensity
+                     + simulator.gamma_w * (simulator.gs - 1) * centers)
+        return simulator.e0 - simulator.Cc * np.log10(effective / simulator.sigma_ref)
+
+    def test_neutrally_buoyant_grains_do_not_add_effective_overburden(self):
+        # Issue #46: total saturated weight was incorrectly used as effective weight.
+        simulator = FiniteStrainConsolidation(
+            nx=1, nz=81, depth=1, e0=2.7, Cc=1, Ck=1, k0=0.001,
+            sigma_ref=20, sigma_top=20, specific_gravity=1, load_intensity=0,
+            total_time=0.1, dt=0.1)
+        np.testing.assert_allclose(simulator.e, 2.7, atol=1e-12)
+        depth = simulator.d_zeta * (np.cumsum(1 + simulator.e, axis=0) - 0.5 * (1 + simulator.e))
+        np.testing.assert_allclose(simulator.sigma_total, 20 + 9.81 * depth, atol=1e-12)
+        simulator.run_simulation(verbose=False)
+        np.testing.assert_allclose(simulator.u, 0, atol=1e-12)
+        np.testing.assert_allclose(simulator.disp_z, 0, atol=1e-12)
 
     def test_no_load_keeps_the_self_weight_equilibrium(self):
         """無載荷では自重と釣り合った初期状態が保たれ、見かけの圧密が起きない。"""
@@ -291,19 +292,15 @@ class FiniteStrainTests(unittest.TestCase):
             np.testing.assert_array_equal(actual, expected)
         self.assertEqual(simulator.get_consolidation_degree(), 0.0)
 
-    def test_steady_state_matches_independent_ode_integration(self):
-        """最終状態の ``e`` プロファイルが独立積分と一致し、格子細分化で収束する。"""
-        errors = []
+    def test_steady_state_matches_analytic_buoyant_equilibrium(self):
+        """最終状態が浮力を含む応力釣合いと一致する。"""
         for nz in (11, 21, 41, 81):
             with self.subTest(nz=nz):
                 simulator = FiniteStrainConsolidation(nx=1, nz=nz, total_time=3650.0, dt=5.0)
                 simulator.run_simulation(verbose=False)
                 self.assertLess(float(np.abs(simulator.u).max()), 1e-6)
-                errors.append(float(np.abs(
-                    self._reference_void_ratio(simulator) - simulator.e[:, 0]).max()))
-        self.assertLess(errors[-1], 5e-6)
-        for coarse, fine in zip(errors, errors[1:]):
-            self.assertLess(fine, 0.5 * coarse)
+                np.testing.assert_allclose(self._reference_void_ratio(simulator),
+                                           simulator.e[:, 0], atol=1e-8, rtol=0)
 
     def test_small_strain_limit_matches_terzaghi_series(self):
         for factor in (0.1, 0.2, 0.4):

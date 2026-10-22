@@ -181,6 +181,8 @@ MIT LICENSE を追加した（著作権者 `Mr-Kondo`、2026年）。`pyproject.
 | `Mikasa.py` | 有限ひずみの入口。`MikasaConsolidationSimulator` はその別名。 |
 | `Terzaghi.py` | 線形の入口と、両理論の比較（`matched_cv`、`matched_modulus`、`run_pair`、`plot_comparison`）。 |
 
+> 以下の#24の数値・式は当時の実装記録です。v0.7.0で静水圧の差し引きを修正したため、現在の支配式・結果は[理論](theory.md)と[論文比較](literature-validation.md)を参照してください。旧RK4比較は同じ誤った自重を共有しており、独立した物理的検証にはなっていませんでした。
+
 扱う要素:
 
 - 物質座標 $\zeta=\int dz/(1+e)$、圧縮則 $e=e_0-C_c\log_{10}(\sigma'/\sigma'_{\mathrm{ref}})$、透水則 $k=k_0 10^{-(e_0-e)/C_k}$。

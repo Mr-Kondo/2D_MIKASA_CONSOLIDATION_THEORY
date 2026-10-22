@@ -66,7 +66,7 @@
 - R. L. Schiffman and V. Pane, "Non-linear Finite Strain Consolidation of Soft Marine Sediments", *Seabed Mechanics*, pp. 123-130, 1984. 確認状況: 書誌。DOI: [10.1007/978-94-009-4958-4_14](https://doi.org/10.1007/978-94-009-4958-4_14)。
 - V. Pane and R. L. Schiffman, "A note on sedimentation and consolidation", *Géotechnique*, Vol. 35, No. 1, pp. 69-72, 1985. 確認状況: 書誌。DOI: [10.1680/geot.1985.35.1.69](https://doi.org/10.1680/geot.1985.35.1.69)。
 - N. Takada and M. Mikasa, "Determination of Consolidation Parameters by Selfweight Consolidation Test in Centrifuge", *Consolidation of Soils: Testing and Evaluation*, ASTM, pp. 548-566, 1986. 遠心模型の自己重圧密試験。自重圧密の考え方に関係します。確認状況: 書誌。DOI: [10.1520/stp34634s](https://doi.org/10.1520/stp34634s)。
-- N. Takada, "Numerical Analysis of Selfweight Consolidation of Very Soft Clay", *Proceedings of the Japan Society of Civil Engineers*, No. 334, 1983. 超軟弱粘土の自己重圧密の数値解析。確認状況: 書誌。DOI: [10.2208/jscej1969.1983.334_113](https://doi.org/10.2208/jscej1969.1983.334_113)。
+- N. Takada, "Numerical Analysis of Selfweight Consolidation of Very Soft Clay", *Proceedings of the Japan Society of Civil Engineers*, No. 334, 1983. 超軟弱粘土の自己重圧密の数値解析。確認状況: 公開本文の§2–4の式・境界・数値例と、§6のTable 3/4・Fig.22を確認し、[比較計算](literature-validation.md)を実施。論文全体の全ケースを再現したという意味ではありません。DOI: [10.2208/jscej1969.1983.334_113](https://doi.org/10.2208/jscej1969.1983.334_113)。
 
 ## 2. 線形小ひずみの参照と比較
 

@@ -17,7 +17,7 @@
 | $`e`$ | 間隙比（間隙体積 ÷ 固体体積）。 |
 | $`e_0`$ | 参照有効応力 $`\sigma'_{\mathrm{ref}}`$ における間隙比。 |
 | $`\sigma,\ \sigma'`$ | 鉛直全応力、鉛直有効応力。 |
-| $`u`$ | 過剰間隙水圧。自重と釣り合った初期状態からの増分。 |
+| $`u`$ | 過剰間隙水圧。静水圧を差し引いた水圧。 |
 | $`k`$ | 透水係数（速度の次元）。 |
 | $`k_0`$ | 参照透水係数（$`e=e_0`$ のときの値）。 |
 | $`C_c,\ C_k`$ | 圧縮指数、透水指数。 |
@@ -99,11 +99,11 @@ $$
 $$
 
 です。有効応力は圧縮則の逆関数で $`e`$ から決まり、$`\partial\sigma'/\partial\zeta=-(1/a_v)\,\partial e/\partial\zeta`$ です。
-$`u=\sigma-\sigma'`$ だから
+$`z=\int_0^\zeta(1+e)\,d\zeta`$ として、過剰水圧は $`u=\sigma-\gamma_w z-\sigma'`$ です。静水圧の勾配 $`\gamma_w(1+e)`$ を引くと
 
 $$
 \frac{\partial u}{\partial \zeta}
-=\gamma_w(G_s+e)+\frac{1}{a_v}\frac{\partial e}{\partial \zeta}
+=\gamma_w(G_s-1)+\frac{1}{a_v}\frac{\partial e}{\partial \zeta}
 \tag{2}
 $$
 
@@ -112,7 +112,7 @@ $$
 $$
 \frac{\partial e}{\partial t}
 =\frac{\partial}{\partial \zeta}\left[
-\frac{k(G_s+e)}{1+e}
+\frac{k(G_s-1)}{1+e}
 +\frac{k}{\gamma_w(1+e)a_v}\frac{\partial e}{\partial \zeta}\right].
 \tag{3}
 $$
@@ -123,7 +123,7 @@ $$
 
 初期状態は、地表応力 $`\sigma_{\mathrm{top}}`$ と自重に有効応力が釣り合うプロファイルです。
 
-各セルで $`\sigma'_i=\sigma'_{i-1}+\gamma_w\Delta\zeta\,(G_s+(e_{i-1}+e_i)/2)`$ を、$`e`$ が $`\sigma'`$ に依存するため不動点反復で解きます（台形則）。
+セル中心で $`\sigma'_i=\sigma_{\mathrm{top}}+\gamma_w(G_s-1)(i+1/2)\Delta\zeta`$ を圧縮則へ代入します。浮力を差し引いた自重は物質座標では間隙比に依存しません。
 層厚が `depth` になる固体厚 $`\Delta\zeta\,n_z`$ は二分法で求めます。
 
 荷重は $`t=0`$ に瞬時に加え、載荷の瞬間には排水が起きないとします。
@@ -136,7 +136,7 @@ $$
 - 底面 $`\zeta=n_z\Delta\zeta`$: 非排水。フラックス0。
 - 側方 $`\xi=0,\ \xi=\mathrm{length}`$: 非排水。フラックス0。
 
-定常状態ではフラックスが0になり、$`u=0`$ に達します。有効応力は自重と載荷を含む全応力に一致します。
+定常状態ではフラックスが0になり、$`u=0`$ に達します。有効応力は全応力から静水圧を引いた値に一致します。
 
 ## 7. 沈下とひずみ
 
@@ -165,7 +165,7 @@ $$
 すると無載荷でも見かけの圧密が生じます（記録: `nz=4` で1.55 mm）。
 
 本実装は (1) の圧力形を使い、$`\partial u/\partial\zeta`$ を離散的な水圧の差から直接作ります。
-全応力と有効応力は同じ離散化なので、自重と釣り合った状態（$`u=0`$）では面のフラックスが厳密に0になります。
+静水圧を差し引いた全応力と有効応力は同じセル中心で評価するので、自重と釣り合った状態（$`u=0`$）では面のフラックスが厳密に0になります。
 無載荷の沈下は厳密に0、定常状態の $`\max|u|`$ はほぼ0になります。
 
 ## 9. 二次元化（著者による拡張）
@@ -178,7 +178,7 @@ $$
 \frac{\partial u}{\partial \xi}=\frac{\partial \sigma_v}{\partial \xi}+\frac{1}{a_v}\frac{\partial e}{\partial \xi}.
 $$
 
-ここで $`\sigma_v`$ は全鉛直応力（$`\sigma_{\mathrm{top}}+\sigma_{\mathrm{load}}+`$ 自重）です。
+ここで $`\sigma_v`$ は全鉛直応力から静水圧を引いた値（$`\sigma_{\mathrm{top}}+\sigma_{\mathrm{load}}+\gamma_w(G_s-1)\zeta`$）です。
 
 荷重 $`\sigma_{\mathrm{load}}`$ は、中央の等分布帯荷重に対する弾性半無限体の鉛直応力増分です（線形モデルと同じ式）。
 
