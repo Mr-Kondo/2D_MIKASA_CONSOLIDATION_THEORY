@@ -1,0 +1,57 @@
+{
+  "title": "Analysing Consolidation Data to Optimise Elastic Visco-plastic Model Parameters for Soft Clay",
+  "author": "Thu Minh Le",
+  "year": 2015,
+  "institution": "University of Technology Sydney",
+  "url": "https://opus.lib.uts.edu.au/bitstream/10453/34461/2/02whole.pdf",
+  "sha256": "94b9b4de5d229629547d297c62c9554fe5cc0252c0136ec8c3e6ab79a6f89870",
+  "extraction": "PDF vector marker centres, PyMuPDF 1.26.7. PDF coordinates in points, origin at top left. Measured markers only; no prediction curves or original figures are redistributed.",
+  "coordinate_uncertainty_pt": 2.5,
+  "uncertainty_note": "Conservative plotting/readout allowance of approximately one marker radius; not instrument accuracy or a statistical confidence interval.",
+  "panels": [
+    {
+      "pdf_page": 171,
+      "printed_page": "4-23",
+      "figure": "4.16, 25 to 50 kPa, blue measured circles",
+      "axes_pdf_pt": [
+        168.18,
+        470.4,
+        511.32,
+        675.42
+      ],
+      "vertical_limits": [
+        20,
+        65
+      ],
+      "fill_rgb": [
+        0.271,
+        0.447,
+        0.655
+      ],
+      "quantity": "strain_percent",
+      "csv": "le_2015_strain.csv"
+    },
+    {
+      "pdf_page": 172,
+      "printed_page": "4-24",
+      "figure": "4.17(a), green measured A1 base pressure",
+      "axes_pdf_pt": [
+        106.2,
+        115.86,
+        445.44,
+        344.46
+      ],
+      "vertical_limits": [
+        40,
+        0
+      ],
+      "fill_rgb": [
+        0.608,
+        0.733,
+        0.349
+      ],
+      "quantity": "pressure_kpa",
+      "csv": "le_2015_pressure.csv"
+    }
+  ]
+}

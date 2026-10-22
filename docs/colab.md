@@ -50,7 +50,7 @@ uv run --locked python -m mikasa_consolidation --device cuda --output-dir output
 `speedup = CPU中央値 / CUDA中央値`で、1より大きければCUDAが速いという意味です。比較時に全状態の有限性とCPUとの一致（絶対・相対許容差とも`1e-8`）を検証し、不一致を黙認しません。
 
 実機テストは三重対角解法の独立した行列残差、1D・2Dの状態一致、reset、収束失敗の通知を確認します。CPUのCIはこれらのGPUテストをskipします。
-GPUの性能と実験・実地盤への適合性は別問題です。実データ比較は[Issue #32](https://github.com/Mr-Kondo/2D_MIKASA_CONSOLIDATION_THEORY/issues/32)で追跡します。
+GPUの性能と実験・実地盤への適合性は別問題です。[公開室内実験との比較](experimental-validation.md)では不一致が残りました。実施記録は[Issue #32](https://github.com/Mr-Kondo/2D_MIKASA_CONSOLIDATION_THEORY/issues/32)にあります。
 
 参照: [CuPy公式の導入方法](https://docs.cupy.dev/en/stable/install.html)（CUDA系列ごとのパッケージと、複数CuPyを混在させない条件）。
 

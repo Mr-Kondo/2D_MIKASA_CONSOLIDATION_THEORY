@@ -1,0 +1,98 @@
+{
+  "source": "https://opus.lib.uts.edu.au/bitstream/10453/34461/2/02whole.pdf",
+  "parameters": {
+    "depth": 0.1014972,
+    "e0": 2.008796,
+    "Cc": 1.002182892337461,
+    "Ck": 1.03,
+    "k0": 0.00010860112815554717,
+    "sigma_ref": 25,
+    "sigma_top": 25,
+    "load_intensity": 25
+  },
+  "environment": {
+    "python": "3.13.5",
+    "numpy": "2.5.4"
+  },
+  "assumed_specific_gravity": 2.65,
+  "common_observation_count": 13,
+  "runs": {
+    "nz21_dt20min": {
+      "settlement_mm": {
+        "rmse": 4.204400677471299,
+        "max_abs": 8.255341401433066
+      },
+      "pressure_kpa": {
+        "rmse": 3.19712049511396,
+        "max_abs": 5.551833862542143
+      }
+    },
+    "nz41_dt20min": {
+      "settlement_mm": {
+        "rmse": 4.201809570951338,
+        "max_abs": 8.255339340912398
+      },
+      "pressure_kpa": {
+        "rmse": 3.2003299381562607,
+        "max_abs": 5.560509943834473
+      }
+    },
+    "nz81_dt20min": {
+      "settlement_mm": {
+        "rmse": 4.2011334775695826,
+        "max_abs": 8.25533879588371
+      },
+      "pressure_kpa": {
+        "rmse": 3.201174732657654,
+        "max_abs": 5.562791247549706
+      }
+    },
+    "nz81_dt10min": {
+      "settlement_mm": {
+        "rmse": 4.198853017135406,
+        "max_abs": 8.255338696739651
+      },
+      "pressure_kpa": {
+        "rmse": 3.2100394812861373,
+        "max_abs": 5.583934378335252
+      }
+    },
+    "nz81_dt5min": {
+      "settlement_mm": {
+        "rmse": 4.197720810643202,
+        "max_abs": 8.255338647979103
+      },
+      "pressure_kpa": {
+        "rmse": 3.2144854132044243,
+        "max_abs": 5.594493041716225
+      }
+    }
+  },
+  "max_grid_change_mm_kpa": [
+    0.005971247705257143,
+    0.0022813037152324966
+  ],
+  "max_time_change_mm_kpa": [
+    0.008148397499751825,
+    0.010762365316892897
+  ],
+  "specific_gravity_sensitivity_mm_kpa": {
+    "2.5": [
+      0.005535414880274203,
+      0.004101482564657033
+    ],
+    "2.8": [
+      0.005527024749214959,
+      0.004094536371614055
+    ]
+  },
+  "vanishing_self_weight_change_mm_kpa": [
+    0.19060613670850834,
+    0.1577152315443371
+  ],
+  "plot_vertical_uncertainty_mm_kpa": [
+    0.7709613696224761,
+    0.4374453193350832
+  ],
+  "plot_time_uncertainty_factor": 1.1071755431338477
+}

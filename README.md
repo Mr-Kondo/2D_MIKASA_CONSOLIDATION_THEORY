@@ -209,12 +209,14 @@ CPUテストで、有限ひずみモデルと線形モデルの両方を検証�
 GitHub ActionsはLinux・macOS・WindowsのPython 3.12・3.13・3.15でCPUテストを実行します。CUDAの検証はColabの実GPUで別途行います。確認範囲は[検証記録](docs/validation.md)と[Colab実行手順](docs/colab.md)に記録しています。
 実施環境・Issue・レビューの記録は [保守記録](docs/maintenance.md) にあります。
 
+公開室内実験（Le, 2015）の沈下と底面水圧も比較しました。この物性換算では両時系列を再現せず、RMSEは沈下4.198 mm・水圧3.214 kPaでした。格子・刻み依存と仮定を[実測比較](docs/experimental-validation.md)に記録しています。実地盤への適合性を確認したという意味ではありません。
+
 ## 未検証の範囲
 
 - 対話バックエンドでの画面表示と手動で閉じた後の終了。`MacOSX` のイベント待ちからの復帰を確認できず、画面表示を明示的な選択に変更しました。
 - GUIバックエンドを使うWindows・Linuxでの画面表示。3OSのCIは`Agg`による非対話実行です。
 - CUDAの検証環境以外のGPU・CUDA版での動作と高速化。有限ひずみモデルは三重対角解法だけをGPUへ移す併用方式です。Apple M5の過去の実験は[GPU検証](docs/validation.md#gpu計算の比較)を参照してください。
-- 実地盤データとの一致（[Issue #32](https://github.com/Mr-Kondo/2D_MIKASA_CONSOLIDATION_THEORY/issues/32)で追跡）、401×401を超える格子での性能。
+- 実地盤データとの一致と設計精度（[室内実測との比較結果](docs/experimental-validation.md)は不一致）、401×401を超える格子での性能。
 - 原著論文との逐語的な一致、三次元化、せん断をともなう二次元圧密。
 
 ## ドキュメント
@@ -223,6 +225,7 @@ GitHub ActionsはLinux・macOS・WindowsのPython 3.12・3.13・3.15でCPUテス
 
 - [docs/theory.md](docs/theory.md): 物質座標、材料則、貯留式の導出、数値解法、二次元化の位置づけ。
 - [docs/references.md](docs/references.md): 参考論文と資料の一覧、用途、確認した範囲。
+- [docs/experimental-validation.md](docs/experimental-validation.md): 公開室内実験の数値化、沈下・水圧の誤差、格子・刻み依存と限界。
 - [docs/colab.md](docs/colab.md): Colab CUDA、ローカルJupyter、コンター図表示と性能比較。
 - [docs/validation.md](docs/validation.md): GUI・OSの確認範囲、GPU併用の測定方法と結果。
 
