@@ -169,7 +169,7 @@ class ConsolidationTests(unittest.TestCase):
                  "E": (0, np.inf), "dt": (0, np.nan, np.inf, True), "total_time": (0, np.inf),
                  "load_width": (0, np.nan), "load_intensity": (-1, np.nan, True),
                  "poisson_ratio": (-0.1, 0.5, np.nan, "0.3", True),
-                 "device": ("cuda", "mps", "mlx")}
+                  "device": ("mps", "mlx", "unknown")}
         for parameter, values in cases.items():
             for value in values:
                 with self.subTest(parameter=parameter, value=value), self.assertRaises(ValueError):
@@ -180,7 +180,8 @@ class ConsolidationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             environment = dict(os.environ, MPLBACKEND="Agg", PYTHONDONTWRITEBYTECODE="1")
             for script in ("mikasa.py", "terzaghi.py"):
-                subprocess.run([sys.executable, str(repository / "scripts" / script)], cwd=directory,
+                subprocess.run([sys.executable, str(repository / "scripts" / script), "--device", "cpu",
+                                "--output-dir", str(Path(directory) / "outputs")], cwd=directory,
                                env=environment, check=True, capture_output=True, text=True, timeout=60)
             for name in ("mikasa_consolidation_result.png", "terzaghi_consolidation_result.png",
                          "terzaghi_mikasa_comparison.png"):

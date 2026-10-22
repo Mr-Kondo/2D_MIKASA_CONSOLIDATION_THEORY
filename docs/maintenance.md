@@ -313,3 +313,13 @@ ponytailで、入口と有限ひずみモジュールに重複していたrun_ex
 元プロジェクトのGIS・機械学習向けの設定階層や多数のoptional extrasは、圧密計算には不要なため採用しなかった。
 
 検証: Python 3.13.5・3.15.0で各30テスト成功。両シミュレーターのクラス本体は移動前とASTが一致し、実行入口は一時ディレクトリから実行してoutputs/のPNG3枚を確認した。ローカルリンク検査も成功した。clean-code-guard・test-guard・docs-guardで変更範囲を確認し、処理を重複する互換ラッパーは追加しなかった。
+
+## Colab CUDA（Issue #35）— 2026-10-22
+
+計算の正本をsrc/に置き、scripts/・CLI・Notebookは共通のrun_examplesを呼び出す。旧run_exampleと比較用mainの重複を削除した。Notebook専用の計算ロジックやフォールバックは追加しない。CuPyとipykernelはoptional依存に限定した。
+
+finite_strainは既存のThomas法のCUDA倍精度カーネルを使用する。残差・Newton反復・収束判定・時間分割はCPUで維持し、線形モデルは既存の固有モード評価の行列演算をCuPyへ移す。入力検証・非有限検出を保持し、CUDAを要求して利用できない場合は明示的に停止する。
+
+rokko-geofusionから役割分離と、稼働中カーネルへのsrcパス追加を採用した。Notebook生成器・設定階層は今回必要ないため追加しなかった。ponytail・clean-code-guard・test-guard・docs-guardで、重複・未使用import・検証の水増し・説明と実装のずれを確認した。ruffのF検査は全src/scripts/testsで成功した。
+
+Python 3.12.13、NumPy 2.0.2、Matplotlib 3.9.4でもCPUテスト31件成功、GPU3件はskip。Python 3.13.5でも同じ結果。ColabのT4ではCUDAテスト4件成功。GPU性能・ブラウザーの画像出力制約はcolab.mdと生ログに記録し、高速化やColab画面での画像表示を未確認のまま成功扱いしない。

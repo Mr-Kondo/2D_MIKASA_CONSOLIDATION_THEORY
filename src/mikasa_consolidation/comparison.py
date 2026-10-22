@@ -8,7 +8,6 @@
 """
 
 import math
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -47,21 +46,23 @@ def terzaghi_degree(time_factor):
     return 100.0 * (1.0 - total)
 
 
-def run_pair(time_factor):
+def run_pair(time_factor, device="cpu"):
     """同じ ``c_v`` で両モデルを ``T = time_factor`` まで走らせ ``(寺田, 三笠)`` を返す。"""
     duration = time_factor * GEOMETRY["depth"]**2 / matched_cv()
-    mikasa = FiniteStrainConsolidation(total_time=duration, dt=duration / 200.0, **FINITE_STRAIN)
+    mikasa = FiniteStrainConsolidation(total_time=duration, dt=duration / 200.0,
+                                     device=device, **FINITE_STRAIN)
     mikasa.run_simulation(verbose=False)
     terzaghi = ConsolidationSimulator(cv=matched_cv(), E=matched_modulus(),
-                                      dt=duration / 200.0, total_time=duration, **GEOMETRY)
+                                      dt=duration / 200.0, total_time=duration, device=device, **GEOMETRY)
     terzaghi.run_simulation(verbose=False)
     return terzaghi, mikasa
 
 
-def plot_comparison(save_path="terzaghi_mikasa_comparison.png", show=False, figsize=(15, 5), dpi=300):
+def plot_comparison(save_path="terzaghi_mikasa_comparison.png", show=False, figsize=(15, 5), dpi=300,
+                    device="cpu"):
     """寺田（線形・小ひずみ）と三笠（有限ひずみ）の比較図を保存する。"""
     final_factor = TIME_FACTORS[-1] / 2.0
-    terzaghi, mikasa = run_pair(final_factor)
+    terzaghi, mikasa = run_pair(final_factor, device=device)
     terzaghi_state = terzaghi.get_current_state()
     mikasa_state = mikasa.get_current_state()
     center = GEOMETRY["nx"] // 2
@@ -70,7 +71,7 @@ def plot_comparison(save_path="terzaghi_mikasa_comparison.png", show=False, figs
 
     degrees = []
     for factor in TIME_FACTORS:
-        pair = run_pair(factor)
+        pair = run_pair(factor, device=device)
         degrees.append((factor, pair[0].get_consolidation_degree(),
                         pair[1].get_consolidation_degree()))
 
@@ -106,22 +107,3 @@ def plot_comparison(save_path="terzaghi_mikasa_comparison.png", show=False, figs
             show_if_interactive()
     finally:
         plt.close(fig)
-
-
-def run_example(save_path):
-    """一定係数（寺田）モデルの既定デモ。"""
-    simulator = ConsolidationSimulator()
-    simulator.run_simulation()
-    simulator.plot_results(save_path=save_path)
-    return simulator
-
-
-def main():
-    output = Path("outputs")
-    output.mkdir(exist_ok=True)
-    run_example(output / "terzaghi_consolidation_result.png")
-    plot_comparison(output / "terzaghi_mikasa_comparison.png")
-
-
-if __name__ == "__main__":
-    main()

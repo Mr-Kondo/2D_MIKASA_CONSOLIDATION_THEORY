@@ -1,0 +1,11 @@
+test_explicit_cuda_request_does_not_fall_back_without_cupy (tests.test_cuda.CudaBoundaryTests.test_explicit_cuda_request_does_not_fall_back_without_cupy) ... ok
+test_non_convergence_is_reported_on_cuda (tests.test_cuda.CudaHardwareTests.test_non_convergence_is_reported_on_cuda) ... ok
+test_states_and_reset_match_cpu_on_one_and_two_dimensional_grids (tests.test_cuda.CudaHardwareTests.test_states_and_reset_match_cpu_on_one_and_two_dimensional_grids) ... ok
+test_thomas_kernel_matches_cpu_and_independent_matrix_residual (tests.test_cuda.CudaHardwareTests.test_thomas_kernel_matches_cpu_and_independent_matrix_residual) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.537s
+
+OK
+
+

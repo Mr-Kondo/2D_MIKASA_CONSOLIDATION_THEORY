@@ -8,7 +8,11 @@
 
 ## 導入と実行
 
-Python 3.13以上と [uv](https://docs.astral.sh/uv/) が必要です。計算はCPU上のNumPyで行い、GPUは使いません。
+Python 3.12以上と [uv](https://docs.astral.sh/uv/) が必要です。既定はNumPyによるCPU計算です。NVIDIA GPUではCUDAを明示して使用できます。
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Mr-Kondo/2D_MIKASA_CONSOLIDATION_THEORY/blob/main/notebooks/consolidation_cuda.ipynb)
+
+ColabでGPUを選択し、Notebookを上から実行すると、両モデルのコンター図とCPU/CUDAの比較結果を表示します。詳しくは[Colab・Jupyterの実行手順](docs/colab.md)を参照してください。
 
 ```bash
 uv sync --locked
@@ -42,6 +46,7 @@ settlement, horizontal, pressure, strain = simulator.get_current_state()
 
 ```text
 src/mikasa_consolidation/  計算・描画・モデル比較を行うPythonパッケージ
+notebooks/                Colab・Jupyterの設定と計算呼び出し、図の表示
 scripts/                  実行入口（mikasa.py、terzaghi.py）
 tests/                    数値解・入力検証・画像保存のテスト
 benchmarks/               任意の依存関係を使う性能比較の実験
@@ -159,6 +164,7 @@ $$
 
 `FiniteStrainConsolidation`（別名 `MikasaConsolidationSimulator`）:
 
+- `device`: `"cpu"`（既定）または `"cuda"`。CUDA指定時はCuPyとNVIDIA GPUが必要です。利用できなければエラーで停止します。
 - `length`, `depth`, `e0`, `Cc`, `Ck`, `k0`, `sigma_ref`, `sigma_top`, `specific_gravity`, `unit_weight_water`, `load_width`, `dt`, `total_time`, `tolerance`: 有限の正数。
 - `load_intensity`: 有限の非負数。`nx`, `nz`, `max_iterations`, `max_splits`: 整数で、`nx`・`max_*` は1以上、`nz` は2以上。
 - 数値でない値（文字列・`None`）と `True`/`False` は数値引数として受理しません。不正な入力には `ValueError`、演算範囲を超えた条件には `FloatingPointError` または `RuntimeError` が発生します。
@@ -168,8 +174,8 @@ $$
 - `reset()`: 初期の間隙比・応力・変位を復元します。
 - `plot_results(save_path=None, show=False, figsize=(18, 5), dpi=300)`: 沈下・過剰間隙水圧・間隙比を描画します。`nx=1` は奥行き方向の線図、`nx>=2` は物理深さを使った塗り分け図です。保存・表示後には図を閉じます。
 
-`ConsolidationSimulator`（別名 `TerzaghiConsolidationSimulator`）は上記に加えて `cv`, `E`, `poisson_ratio`（`0 <= poisson_ratio < 0.5`）, `device`（`"auto"` または `"cpu"`）を取ります。
-`"mps"`, `"cuda"`, `"mlx"` は明示的に拒否します。`get_current_state()` の順序は同じで、`plot_results` は沈下・水平変位・水圧を描画します。
+`ConsolidationSimulator`（別名 `TerzaghiConsolidationSimulator`）は上記に加えて `cv`, `E`, `poisson_ratio`（`0 <= poisson_ratio < 0.5`）, `device`（`"auto"`・`"cpu"`・`"cuda"`、`"auto"`はCPU）を取ります。
+`"mps"`・`"mlx"` は受理しません。`get_current_state()` の順序は同じで、`plot_results` は沈下・水平変位・水圧を描画します。
 
 生成後に格子・材料・時間・荷重条件を変更するときは、新しいインスタンスを作ってください。
 二次圧密、時間変動荷重、不均一な透水性、載荷にともなう全応力の再配分、せん断・水平力の釣合いは扱いません。
@@ -185,7 +191,7 @@ $$
 uv run --locked python -m unittest -v
 ```
 
-30テストで、有限ひずみモデルと線形モデルの両方を検証します。
+CPUテストで、有限ひずみモデルと線形モデルの両方を検証します。CUDAの実機テストは環境変数`MIKASA_TEST_CUDA=1`を指定した場合に実行します。CPUだけの環境では明示的にskipされます。
 
 - 自重の釣り合い: 無載荷では初期状態が保たれ、`max|u| ≤ 1.7e-13 kPa`、沈下は厳密に0（`nz=4〜64`）。
 - 定常解: 自重と有効応力の釣り合いを独立に RK4 積分した参照解との `e` 誤差が
@@ -200,15 +206,14 @@ uv run --locked python -m unittest -v
 - 二次元既定例（21×21、730ステップ）: 中央沈下 `376.5 mm`、間隙比 `1.247〜1.906`、消散率 `100.1 %`、自動分割なし。
 - 入力異常、収束失敗の `RuntimeError`、リセット、1次元・2次元の画像出力、両入口スクリプトの完走を検証します。
 
-GitHub Actions はLinux・macOS・WindowsのPython 3.13・3.15で同じテストを実行します。
-[PR #31の6構成](https://github.com/Mr-Kondo/2D_MIKASA_CONSOLIDATION_THEORY/actions/runs/39694413236)ですべて30テストが成功しました。確認範囲は [docs/validation.md](docs/validation.md) に記録しています。
+GitHub ActionsはLinux・macOS・WindowsのPython 3.12・3.13・3.15でCPUテストを実行します。CUDAの検証はColabの実GPUで別途行います。確認範囲は[検証記録](docs/validation.md)と[Colab実行手順](docs/colab.md)に記録しています。
 実施環境・Issue・レビューの記録は [保守記録](docs/maintenance.md) にあります。
 
 ## 未検証の範囲
 
 - 対話バックエンドでの画面表示と手動で閉じた後の終了。`MacOSX` のイベント待ちからの復帰を確認できず、画面表示を明示的な選択に変更しました。
 - GUIバックエンドを使うWindows・Linuxでの画面表示。3OSのCIは`Agg`による非対話実行です。
-- GPUを正式なバックエンドとして使うこと。Apple M5での実験は [GPU検証](docs/validation.md#gpu計算の比較) を参照してください。
+- CUDAの検証環境以外のGPU・CUDA版での動作と高速化。有限ひずみモデルは三重対角解法だけをGPUへ移す併用方式です。Apple M5の過去の実験は[GPU検証](docs/validation.md#gpu計算の比較)を参照してください。
 - 実地盤データとの一致（[Issue #32](https://github.com/Mr-Kondo/2D_MIKASA_CONSOLIDATION_THEORY/issues/32)で追跡）、401×401を超える格子での性能。
 - 原著論文との逐語的な一致、三次元化、せん断をともなう二次元圧密。
 
@@ -218,6 +223,7 @@ GitHub Actions はLinux・macOS・WindowsのPython 3.13・3.15で同じテスト
 
 - [docs/theory.md](docs/theory.md): 物質座標、材料則、貯留式の導出、数値解法、二次元化の位置づけ。
 - [docs/references.md](docs/references.md): 参考論文と資料の一覧、用途、確認した範囲。
+- [docs/colab.md](docs/colab.md): Colab CUDA、ローカルJupyter、コンター図表示と性能比較。
 - [docs/validation.md](docs/validation.md): GUI・OSの確認範囲、GPU併用の測定方法と結果。
 
 ## 参考文献
