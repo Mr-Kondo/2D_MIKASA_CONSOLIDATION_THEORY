@@ -5,7 +5,8 @@
 - [theory.md](theory.md) — 有限ひずみ圧密の理論と数値解法の解説。
 - [references.md](references.md) — 参考論文と資料の一覧、用途、確認した範囲。
 - [maintenance.md](maintenance.md) — Issueごとの対応と検証の記録。
-- [experimental-validation.md](experimental-validation.md) — 公開室内実験との比較、不一致の結果と仮定。
+- [literature-validation.md](literature-validation.md) — 論文別のIssue、数値解との照合、条件対応と未確認事項。
+- [experimental-validation.md](experimental-validation.md) — クリープを含む室内試験への探索的適用、差と仮定。
 - [colab.md](colab.md) — Colab CUDA・ローカルJupyterの実行、コンター図表示、CPU比較。
 - [validation.md](validation.md) — GUI・OSの確認範囲と、Apple M5でのGPU併用実験。
 

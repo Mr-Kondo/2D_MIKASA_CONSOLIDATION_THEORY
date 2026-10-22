@@ -49,7 +49,7 @@ src/mikasa_consolidation/  計算・描画・モデル比較を行うPythonパ�
 notebooks/                Colab・Jupyterの設定と計算呼び出し、図の表示
 scripts/                  実行入口（mikasa.py、terzaghi.py）
 tests/                    数値解・入力検証・画像保存のテスト
-benchmarks/               任意の依存関係を使う性能比較の実験
+benchmarks/               論文の数値解・実測値との比較、性能測定
 docs/                     理論・参考文献・検証・保守記録
   images/                 リポジトリに保存した結果図の見本
   evidence/               検証時の生ログ
@@ -209,14 +209,16 @@ CPUテストで、有限ひずみモデルと線形モデルの両方を検証�
 GitHub ActionsはLinux・macOS・WindowsのPython 3.12・3.13・3.15でCPUテストを実行します。CUDAの検証はColabの実GPUで別途行います。確認範囲は[検証記録](docs/validation.md)と[Colab実行手順](docs/colab.md)に記録しています。
 実施環境・Issue・レビューの記録は [保守記録](docs/maintenance.md) にあります。
 
-公開室内実験（Le, 2015）の沈下と底面水圧も比較しました。この物性換算では両時系列を再現せず、RMSEは沈下4.198 mm・水圧3.214 kPaでした。格子・刻み依存と仮定を[実測比較](docs/experimental-validation.md)に記録しています。実地盤への適合性を確認したという意味ではありません。
+数値解法の照合と、実験への適用範囲の確認を分けています。[論文ごとの比較](docs/literature-validation.md)では、同じ圧縮則・透水則を使う公開CS2数表との比較と、各論文の確認状況を記録しています。
+
+[Le (2015)との探索的な実測比較](docs/experimental-validation.md)は、原著が扱うクリープを現モデルが含まない条件です。今回の物性換算では沈下・水圧を再現しませんでしたが、この結果だけで実装の誤りや三笠理論の不成立を判断できません。実地盤への適合性を確認したという意味でもありません。
 
 ## 未検証の範囲
 
 - 対話バックエンドでの画面表示と手動で閉じた後の終了。`MacOSX` のイベント待ちからの復帰を確認できず、画面表示を明示的な選択に変更しました。
 - GUIバックエンドを使うWindows・Linuxでの画面表示。3OSのCIは`Agg`による非対話実行です。
 - CUDAの検証環境以外のGPU・CUDA版での動作と高速化。有限ひずみモデルは三重対角解法だけをGPUへ移す併用方式です。Apple M5の過去の実験は[GPU検証](docs/validation.md#gpu計算の比較)を参照してください。
-- 実地盤データとの一致と設計精度（[室内実測との比較結果](docs/experimental-validation.md)は不一致）、401×401を超える格子での性能。
+- 実地盤データとの一致と設計精度、自重圧密の既往実験との比較、401×401を超える格子での性能。[論文ごとの確認状況](docs/literature-validation.md)と[適用範囲を調べた室内実測比較](docs/experimental-validation.md)を参照してください。
 - 原著論文との逐語的な一致、三次元化、せん断をともなう二次元圧密。
 
 ## ドキュメント
@@ -225,7 +227,8 @@ GitHub ActionsはLinux・macOS・WindowsのPython 3.12・3.13・3.15でCPUテス
 
 - [docs/theory.md](docs/theory.md): 物質座標、材料則、貯留式の導出、数値解法、二次元化の位置づけ。
 - [docs/references.md](docs/references.md): 参考論文と資料の一覧、用途、確認した範囲。
-- [docs/experimental-validation.md](docs/experimental-validation.md): 公開室内実験の数値化、沈下・水圧の誤差、格子・刻み依存と限界。
+- [docs/literature-validation.md](docs/literature-validation.md): 論文別のIssue、数値解との照合、初期・境界条件と未確認事項。
+- [docs/experimental-validation.md](docs/experimental-validation.md): クリープを含む室内試験への探索的適用、数値化と仮定。
 - [docs/colab.md](docs/colab.md): Colab CUDA、ローカルJupyter、コンター図表示と性能比較。
 - [docs/validation.md](docs/validation.md): GUI・OSの確認範囲、GPU併用の測定方法と結果。
 
