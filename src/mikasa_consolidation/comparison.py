@@ -1,22 +1,20 @@
 """寺田（Terzaghi）型の線形小ひずみ圧密と、三笠有限ひずみ圧密との比較。
 
-``TerzaghiConsolidationSimulator`` は ``consolidation.py`` の一定 ``c_v`` 線形拡散、
-``MikasaConsolidationSimulator`` は ``finite_strain.py`` の有限ひずみ実装。
+``ConsolidationSimulator`` は ``linear.py`` の一定 ``c_v`` 線形拡散、
+``FiniteStrainConsolidation`` は ``finite_strain.py`` の有限ひずみ実装。
 
 比較図は、両理論が一致すべき条件（小ひずみ、自重の影響が小さい）で描く。同じ
 ``c_v`` と、圧縮則から換算した同じ一次圧縮係数を与える。
 """
 
 import math
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-from consolidation import ConsolidationSimulator, show_if_interactive
-from finite_strain import FiniteStrainConsolidation
-
-TerzaghiConsolidationSimulator = ConsolidationSimulator
-MikasaConsolidationSimulator = FiniteStrainConsolidation
+from .linear import ConsolidationSimulator, show_if_interactive
+from .finite_strain import FiniteStrainConsolidation
 
 #: 比較条件。帯載荷を十分広く取り、荷重は初期有効応力の 5% に抑える。
 GEOMETRY = dict(length=1.0, depth=1.0, nx=2, nz=41, load_intensity=50.0, load_width=1.0e9)
@@ -119,8 +117,10 @@ def run_example(save_path):
 
 
 def main():
-    run_example("terzaghi_consolidation_result.png")
-    plot_comparison("terzaghi_mikasa_comparison.png")
+    output = Path("outputs")
+    output.mkdir(exist_ok=True)
+    run_example(output / "terzaghi_consolidation_result.png")
+    plot_comparison(output / "terzaghi_mikasa_comparison.png")
 
 
 if __name__ == "__main__":

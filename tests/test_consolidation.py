@@ -16,11 +16,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from consolidation import ConsolidationSimulator, is_negligible_field
-from finite_strain import FiniteStrainConsolidation
-from Mikasa import MikasaConsolidationSimulator
-from Terzaghi import (TerzaghiConsolidationSimulator, matched_cv, matched_modulus,
-                      plot_comparison, run_pair, terzaghi_degree)
+from mikasa_consolidation import (ConsolidationSimulator, FiniteStrainConsolidation,
+                                 MikasaConsolidationSimulator, TerzaghiConsolidationSimulator)
+from mikasa_consolidation.linear import is_negligible_field
+from mikasa_consolidation.comparison import (matched_cv, matched_modulus,
+                                            plot_comparison, run_pair, terzaghi_degree)
 
 #: 小ひずみ極限の一致条件。自重と有限ひずみの影響が小さくなるよう荷重を初期有効応力の
 #: 1e-6 倍に取り、線形モデルと同じ ``c_v`` を与える ``k0`` を圧縮則から逆算する。
@@ -176,15 +176,15 @@ class ConsolidationTests(unittest.TestCase):
                     ConsolidationSimulator(**{parameter: value})
 
     def test_entrypoints_and_headless_plots_use_real_updated_solver(self):
-        repository = Path(__file__).resolve().parent
+        repository = Path(__file__).resolve().parents[1]
         with tempfile.TemporaryDirectory() as directory:
             environment = dict(os.environ, MPLBACKEND="Agg", PYTHONDONTWRITEBYTECODE="1")
-            for script in ("Mikasa.py", "Terzaghi.py"):
-                subprocess.run([sys.executable, str(repository / script)], cwd=directory,
+            for script in ("mikasa.py", "terzaghi.py"):
+                subprocess.run([sys.executable, str(repository / "scripts" / script)], cwd=directory,
                                env=environment, check=True, capture_output=True, text=True, timeout=60)
             for name in ("mikasa_consolidation_result.png", "terzaghi_consolidation_result.png",
                          "terzaghi_mikasa_comparison.png"):
-                self.assertEqual(plt.imread(Path(directory) / name).ndim, 3)
+                self.assertEqual(plt.imread(Path(directory) / "outputs" / name).ndim, 3)
         self.assertEqual(plt.get_fignums(), [])
 
     def test_negligible_field_detection_uses_the_reference_scale(self):

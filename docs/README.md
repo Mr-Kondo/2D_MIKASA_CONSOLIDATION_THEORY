@@ -4,8 +4,9 @@
 
 - [theory.md](theory.md) — 有限ひずみ圧密の理論と数値解法の解説。
 - [references.md](references.md) — 参考論文と資料の一覧、用途、確認した範囲。
+- [maintenance.md](maintenance.md) — Issueごとの対応と検証の記録。
 - [validation.md](validation.md) — GUI・OSの確認範囲と、Apple M5でのGPU併用実験。
 
-本文の数値・記号・式は、リポジトリの実装（`finite_strain.py`、`consolidation.py`）に合わせています。実装を変えたときは、この文書も更新してください。
+本文の数値・記号・式は、リポジトリの実装（`src/mikasa_consolidation/`）に合わせています。実装を変えたときは、この文書も更新してください。
 
 > 二次元化（平面ひずみ）は著者による拡張で、三笠が公表した理論ではありません。原著（三笠 1963 など）の本文は確認していません。逐語的な一致は主張しません。

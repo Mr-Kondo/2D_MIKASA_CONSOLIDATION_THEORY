@@ -6,17 +6,14 @@ Outputs JSON to stdout. NumPy residuals and convergence criteria remain float64.
 
 import importlib.metadata
 import json
-from pathlib import Path
 import platform
 import statistics
-import sys
 import time
 
 import mlx.core as mx
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from finite_strain import FiniteStrainConsolidation, _tridiagonal_batch
+from mikasa_consolidation.finite_strain import FiniteStrainConsolidation, _tridiagonal_batch
 
 
 # One thread per column avoids launching a GPU operation for each row.

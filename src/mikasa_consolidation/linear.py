@@ -220,11 +220,3 @@ class ConsolidationSimulator:
                 show_if_interactive()
         finally:
             plt.close(fig)
-
-
-def run_example(save_path):
-    simulator = ConsolidationSimulator(length=20, depth=10, nx=51, nz=26, dt=0.01,
-                                       total_time=3650, load_width=4)
-    simulator.run_simulation()
-    simulator.plot_results(save_path=save_path)
-    return simulator

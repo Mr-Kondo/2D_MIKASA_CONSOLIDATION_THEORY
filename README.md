@@ -12,19 +12,19 @@ Python 3.13以上と [uv](https://docs.astral.sh/uv/) が必要です。計算�
 
 ```bash
 uv sync --locked
-uv run --locked Mikasa.py
-uv run --locked Terzaghi.py
+uv run --locked python scripts/mikasa.py
+uv run --locked python scripts/terzaghi.py
 ```
 
-- `Mikasa.py`: 有限ひずみ圧密（`finite_strain.py`）を既定条件で実行し、`mikasa_consolidation_result.png` を生成します。
-- `Terzaghi.py`: 線形小ひずみモデル（`consolidation.py`）で `terzaghi_consolidation_result.png` を、両理論の比較図 `terzaghi_mikasa_comparison.png` を生成します。
-- 画像は実行時の作業ディレクトリへ保存し、同名の既存画像を上書きします。画面表示は既定で無効です。
+- `scripts/mikasa.py`: 有限ひずみ圧密（`src/mikasa_consolidation/finite_strain.py`）を既定条件で実行し、`mikasa_consolidation_result.png` を生成します。
+- `scripts/terzaghi.py`: 線形小ひずみモデル（`src/mikasa_consolidation/linear.py`）で `terzaghi_consolidation_result.png` を、両理論の比較図 `terzaghi_mikasa_comparison.png` を生成します。
+- 画像は実行時の作業ディレクトリの`outputs/`へ保存し、同名の既存画像を上書きします。画面表示は既定で無効です。
 
 画面表示する場合は、GUI環境で `plot_results(show=True)` または `plot_comparison(show=True)` を明示してください。
 画像の保存だけを行う環境では `MPLBACKEND=Agg` を設定するとGUIバックエンドを使わずに実行できます。
 
 ```python
-from finite_strain import FiniteStrainConsolidation
+from mikasa_consolidation import FiniteStrainConsolidation
 
 simulator = FiniteStrainConsolidation(
     length=20.0, depth=10.0, nx=21, nz=21,
@@ -37,6 +37,22 @@ settlement = simulator.run_simulation(verbose=False)
 simulator.plot_results(save_path="result.png", show=False)
 settlement, horizontal, pressure, strain = simulator.get_current_state()
 ```
+
+## フォルダ構成
+
+```text
+src/mikasa_consolidation/  計算・描画・モデル比較を行うPythonパッケージ
+scripts/                  実行入口（mikasa.py、terzaghi.py）
+tests/                    数値解・入力検証・画像保存のテスト
+benchmarks/               任意の依存関係を使う性能比較の実験
+docs/                     理論・参考文献・検証・保守記録
+  images/                 リポジトリに保存した結果図の見本
+  evidence/               検証時の生ログ
+outputs/                  実行時に生成するPNG等（Git管理対象外）
+```
+
+v0.5.0からルートの`Mikasa.py`・`Terzaghi.py`を`scripts/`へ移し、計算モジュールをパッケージ化しました。
+旧来の`from finite_strain import ...`は`from mikasa_consolidation import ...`へ変更してください。
 
 ## 有限ひずみ圧密（三笠／Gibson 系）
 
@@ -106,7 +122,7 @@ $`\partial u/\partial \zeta`$ の離散差から直接作ります。支配方�
 
 ## 線形小ひずみの参照モデル（寺田型）
 
-`consolidation.py` の `ConsolidationSimulator` は、一定係数の2次元水圧拡散を解き、各鉛直柱の拘束圧密で沈下へ換算します。
+`src/mikasa_consolidation/linear.py` の `ConsolidationSimulator` は、一定係数の2次元水圧拡散を解き、各鉛直柱の拘束圧密で沈下へ換算します。
 有限ひずみモデルとの比較と、解析解が既知の基準として残しています。
 
 ### 水圧の消散
@@ -159,7 +175,7 @@ $$
 二次圧密、時間変動荷重、不均一な透水性、載荷にともなう全応力の再配分、せん断・水平力の釣合いは扱いません。
 実地盤への適合性・設計精度は検証していません。
 
-`Terzaghi.py` には比較用の補助関数があります。`matched_cv()` と `matched_modulus()` は圧縮則から換算した
+`mikasa_consolidation.comparison` には比較用の補助関数があります。`matched_cv()` と `matched_modulus()` は圧縮則から換算した
 同じ $`c_v`$ と弾性係数を返し、`run_pair(T)` は両モデルを同じ条件で走らせます。`terzaghi_degree(T)` は
 片面排水の解析解、`plot_comparison()` は比較図を保存します。
 
@@ -186,7 +202,7 @@ uv run --locked python -m unittest -v
 
 GitHub Actions はLinux・macOS・WindowsのPython 3.13・3.15で同じテストを実行します。
 [PR #31の6構成](https://github.com/Mr-Kondo/2D_MIKASA_CONSOLIDATION_THEORY/actions/runs/39694413236)ですべて30テストが成功しました。確認範囲は [docs/validation.md](docs/validation.md) に記録しています。
-実施環境・Issue・レビューの記録は [MAINTENANCE.md](MAINTENANCE.md) にあります。
+実施環境・Issue・レビューの記録は [保守記録](docs/maintenance.md) にあります。
 
 ## 未検証の範囲
 
