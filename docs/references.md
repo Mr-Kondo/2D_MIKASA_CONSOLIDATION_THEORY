@@ -3,6 +3,8 @@
 本実装が参照した論文と資料を、書誌情報、用途、確認した範囲に分けて記録します。確認は2026年10月22日時点です。
 **一次資料の本文を読んだかどうかを区別し、読んでいないものを読んだとは扱いません。**
 
+2026-10-22の比較候補の再調査（梅原・善1979、小林1982、高田1983、Morris 2002、Fox・Pu 2015、Puら2018、Songら2024）と、各本文の確認範囲・論文別Issueは[論文ごとの計算比較](literature-validation.md)に記録しています。
+
 ## 確認状況の区分
 
 | 区分 | 意味 |
@@ -85,7 +87,7 @@
 ### Crank and Nicolson (1947)
 
 - J. Crank and P. Nicolson, "A practical method for numerical evaluation of solutions of partial differential equations of the heat-conduction type", *Mathematical Proceedings of the Cambridge Philosophical Society*, Vol. 43, No. 1, pp. 50-67, 1947.
-- 用途: 線形モデル（`consolidation.py`）の時間積分。増幅率の符号と安定性の確認。
+- 用途: 線形モデル（`src/mikasa_consolidation/linear.py`）の時間積分。増幅率の符号と安定性の確認。
 - 確認状況: 書誌。DOI: [10.1017/S0305004100023197](https://doi.org/10.1017/S0305004100023197)。
 
 ### MIT 18.303 Lecture 21 (2014)
@@ -105,7 +107,7 @@
 ### USACE (1990) EM 1110-1-1904
 
 - U.S. Army Corps of Engineers, *Settlement Analysis*, Engineer Manual EM 1110-1-1904, 1990, Table C-1.
-- 用途: 帯荷重の鉛直応力増分の式。`finite_strain.py` の `sigma_load` と `consolidation.py` が同じ式を使います。
+- 用途: 帯荷重の鉛直応力増分の式。`src/mikasa_consolidation/finite_strain.py` の `sigma_load` と `src/mikasa_consolidation/linear.py` が同じ式を使います。
 - 確認状況: 索引（検索索引にある表）。公式PDFの直接取得はHTTP 403で失敗しました。式は、線荷重の独立な数値積分とも一致させて確認しています。<https://www.publications.usace.army.mil/Portals/76/Publications/EngineerManuals/EM_1110-1-1904.pdf>
 
 ## 5. 確認できていないこと

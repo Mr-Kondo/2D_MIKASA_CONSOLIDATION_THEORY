@@ -1,0 +1,27 @@
+{
+  "title": "Novel Simplified Practical Method for One-Dimensional Large-Strain Consolidation",
+  "authors": ["Ding-Bao Song", "Peng-Lin Li", "Zhen-Yu Yin", "Jian-Hua Yin"],
+  "year": 2024,
+  "doi": "10.1002/nag.3843",
+  "url": "https://ira.lib.polyu.edu.hk/bitstream/10397/110228/1/Song_Novel_Simplified_Practical.pdf",
+  "pdf_sha256": "dc13f1897f71c07fa93d2bd6a2fdabd9bf2d4d48286f069c947311bf44aae9ac",
+  "license": "CC BY, as stated on the first PDF page",
+  "constitutive_equations": {"pdf_page": 3, "printed_page": 4246, "equations": [10, 11]},
+  "parameters": {"pdf_page": 8, "printed_page": 4251, "section": 4},
+  "reference": {
+    "pdf_page": 9,
+    "printed_page": 4252,
+    "table": 1,
+    "columns": "V-Cv (CS2 numerical predictions)",
+    "cross_check": "Identical CS2 columns in Table 2; checked against the rendered page",
+    "row_count": 14,
+    "column_count": 4,
+    "rounding_half_width_percentage_points": 0.0005
+  },
+  "assumptions": {
+    "year_days": 365.25,
+    "water_unit_weight_kN_m3": 9.81,
+    "note": "Year length and numerical water unit weight were not specified in the checked text. They are comparison assumptions, not identified paper values.",
+    "self_weight": "Negligible-weight limit used to recover uniform initial stress and the published final settlement. Scale k and gamma_w by the same factor; not real material properties."
+  }
+}
