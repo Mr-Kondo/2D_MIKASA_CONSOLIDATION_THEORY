@@ -29,7 +29,7 @@ uv run --locked --extra notebook python -m ipykernel install --user --name mikas
 カーネル登録が不要になったら、Jupyterの`kernelspec remove mikasa`で削除できます。
 
 NVIDIA GPUと対応するドライバーがあるLinux・Windowsでは、インストール時に`--extra cuda`も指定します。
-CUDA 12系向けCuPyを使用します。macOSはNVIDIA CUDAの対象外です。
+ローカルの`cuda` extraはCUDA 12系向けCuPyを導入します。Colabでは既存のCuPy（CUDA 13系を含む）を再利用し、別系列を重複インストールしません。macOSはNVIDIA CUDAの対象外です。
 
 ```bash
 uv sync --locked --extra notebook --extra cuda
