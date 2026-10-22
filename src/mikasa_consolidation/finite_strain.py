@@ -1,6 +1,6 @@
 """三笠／Gibson 系の有限ひずみ圧密を物質座標で解く。
 
-一定係数の線形拡散（`consolidation.py`）と違い、次の要素を扱う。
+一定係数の線形拡散（`linear.py`）と違い、次の要素を扱う。
 
 - 物質座標 ``ζ = ∫ dz/(1+e)``（固体体積に基づく座標、地表で0、下向き正）
 - 圧縮則 ``e = e0 - Cc log10(σ'/σ'_ref)``
@@ -31,7 +31,7 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 
-from consolidation import _require_real, _validate_scalars, is_negligible_field, show_if_interactive
+from .linear import _require_real, _validate_scalars, is_negligible_field, show_if_interactive
 
 LN10 = math.log(10.0)
 

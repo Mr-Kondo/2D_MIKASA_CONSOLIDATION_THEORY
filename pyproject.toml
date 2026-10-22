@@ -1,6 +1,10 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "2d-mikasa-consolidation-theory"
-version = "0.4.1"
+version = "0.5.0"
 description = "Mikasa/Gibson-type finite-strain consolidation in material coordinates, with a linear small-strain reference"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -10,3 +14,6 @@ dependencies = [
     "matplotlib>=3.11.2",
     "numpy>=2.5.4",
 ]
+
+[tool.setuptools.packages.find]
+where = ["src"]

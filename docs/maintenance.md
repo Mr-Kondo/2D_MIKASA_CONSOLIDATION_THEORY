@@ -1,3 +1,5 @@
+> v0.5.0でこの記録を`docs/maintenance.md`へ移動した。過去の節のファイル名は、その検証時点の構成を示す。現在の配置はREADMEを参照。
+
 # 保守記録 — 2026-10-21
 
 基準コミット `4c4ace4`、ブランチ `maintenance/theory-and-dependencies`。対象は Issue #1〜#6。
@@ -301,3 +303,13 @@ GUIの手動表示確認、実地盤データとの比較、CUDAやGPUへの全�
 GitHubのREADME実表示で、帯荷重の式に「The following macros are not allowed: operatorname」が出ることと、7段落に未描画のドル区切りが残ることを確認した。`operatorname{atan2}`を`mathrm{atan2}`へ置き換え、インライン数式をGitHub公式のバッククォート併用区切りで保護した。`docs/theory.md`にも同じ区切りを適用し、区切りの追加と同義の関数表記以外は本文が一致することを確認した。計算ロジックは変更していない。
 
 参照: [GitHub公式の数式記法](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/writing-mathematical-expressions)。ponytailで変更範囲を表示に限定し、docs-guardで式・数値・リンクの保持を確認した。
+
+## 構成整理（Issue #34）— 2026-10-22
+
+`rokko-geofusion`のsrc/・scripts/・tests/・outputs/の責務分離を参考にした。パッケージを編集可能インストールし、実行入口は計算関数を呼び出すだけにした。生成PNGはoutputs/へ保存し、既存の見本PNGはdocs/images/に移した。保守記録はこのファイルへ移動した。既存の未追跡ファイルとユーザー環境は保持した。
+
+ponytailで、入口と有限ひずみモジュールに重複していたrun_exampleを1箇所に集約し、呼び出し元がない線形デモと重複した別名定義を削除した。比較用の物性条件、入力検証、反復、異常検出、数値結果は維持する。APIのimport元と実行コマンドの変更はREADMEに明記した。
+
+元プロジェクトのGIS・機械学習向けの設定階層や多数のoptional extrasは、圧密計算には不要なため採用しなかった。
+
+検証: Python 3.13.5・3.15.0で各30テスト成功。両シミュレーターのクラス本体は移動前とASTが一致し、実行入口は一時ディレクトリから実行してoutputs/のPNG3枚を確認した。ローカルリンク検査も成功した。clean-code-guard・test-guard・docs-guardで変更範囲を確認し、処理を重複する互換ラッパーは追加しなかった。

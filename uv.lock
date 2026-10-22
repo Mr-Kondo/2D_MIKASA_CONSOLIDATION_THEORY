@@ -4,8 +4,8 @@ requires-python = ">=3.13"
 
 [[package]]
 name = "2d-mikasa-consolidation-theory"
-version = "0.4.1"
-source = { virtual = "." }
+version = "0.5.0"
+source = { editable = "." }
 dependencies = [
     { name = "matplotlib" },
     { name = "numpy" },
