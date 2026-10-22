@@ -295,3 +295,9 @@ GUIの手動表示確認、実地盤データとの比較、CUDAやGPUへの全�
 中断したGPU試作とGUI試験のプロセスは終了した。最終ログを`docs/evidence/`に保存し、一時PNG・調査ログは削除した。
 既存の`.venv/`・`.serena/`・引き継ぎ文書2件・追跡中のPNGは保持する。GPUの試験依存関係は`uv run --with`の隔離環境で使い、通常の依存関係は変更していない。`pyproject.toml`・`uv.lock`のプロジェクトバージョンだけを0.4.0に同期する。
 共有のuvキャッシュは、ほかのプロジェクトでも使うため保持した。
+
+## 数式表示の修正（Issue #33）— 2026-10-22
+
+GitHubのREADME実表示で、帯荷重の式に「The following macros are not allowed: operatorname」が出ることと、7段落に未描画のドル区切りが残ることを確認した。`operatorname{atan2}`を`mathrm{atan2}`へ置き換え、インライン数式をGitHub公式のバッククォート併用区切りで保護した。`docs/theory.md`にも同じ区切りを適用し、区切りの追加と同義の関数表記以外は本文が一致することを確認した。計算ロジックは変更していない。
+
+参照: [GitHub公式の数式記法](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/writing-mathematical-expressions)。ponytailで変更範囲を表示に限定し、docs-guardで式・数値・リンクの保持を確認した。
