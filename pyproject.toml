@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "2d-mikasa-consolidation-theory"
-version = "0.6.2"
+version = "0.7.0"
 description = "Mikasa/Gibson-type finite-strain consolidation in material coordinates, with a linear small-strain reference"
 readme = "README.md"
 requires-python = ">=3.12"

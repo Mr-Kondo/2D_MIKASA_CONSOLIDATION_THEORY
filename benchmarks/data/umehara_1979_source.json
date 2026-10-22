@@ -1,0 +1,57 @@
+{
+  "url": "https://www.pari.go.jp/PDF/vol018-no01-02.pdf",
+  "sha256": "f359427c474590291b3aff3bceba4746ad2577c01ad14fad3e89250ec4ce9d33",
+  "pages": "PDF 15 Table 4.1; PDF 29 Table 6.1/Fig.6.1; PDF 31 Fig.6.2(b)",
+  "image_size": [
+    1259,
+    1800
+  ],
+  "settlement_axes": {
+    "x": [
+      365,
+      964
+    ],
+    "time_min": [
+      1000,
+      1000000
+    ],
+    "y": [
+      1152,
+      1467
+    ],
+    "settlement_m": [
+      0,
+      0.1
+    ]
+  },
+  "pressure_axes": {
+    "x": [
+      320,
+      957
+    ],
+    "pressure_gf_cm2": [
+      0,
+      15
+    ],
+    "image_size": [
+      1266,
+      1800
+    ]
+  },
+  "read_half_width_px": 2.5,
+  "case": {
+    "height": 0.8,
+    "volume_ratio": 8.849,
+    "specific_gravity": 2.59,
+    "Cc": 1.75,
+    "cv": 0.0036,
+    "yield_stress": 0.127754974152514
+  },
+  "assumptions": [
+    "Top uncompressed cap treated using Takada (1983) section 3 approximation; not specified identically in Umehara implementation",
+    "cv=0.025 cm2/min =0.0036 m2/day",
+    "Settlement plate initially at 0.1 m; pressure sensors follow material originally at 0.1..0.8 m",
+    "Graph reading range is not instrument uncertainty; no parameter fitting",
+    "50/80-day pressure mismatch and possible instrument lag already noted by original authors"
+  ]
+}
