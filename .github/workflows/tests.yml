@@ -27,3 +27,20 @@ jobs:
         run: uv run --locked python -VV
       - name: Run tests
         run: uv run --locked python -m unittest -v
+
+  scipy-checks:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    env:
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          python-version: "3.13"
+          enable-cache: false
+      - name: Check experimental SciPy adapters against existing regressions
+        run: uv run --locked --with scipy==1.18.1 python benchmarks/scipy_evaluation.py --check
