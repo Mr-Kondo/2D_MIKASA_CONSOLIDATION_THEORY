@@ -8,6 +8,7 @@
 - [literature-validation.md](literature-validation.md) — 論文別のIssue、数値解との照合、条件対応と未確認事項。
 - [experimental-validation.md](experimental-validation.md) — クリープを含む室内試験への探索的適用、差と仮定。
 - [colab.md](colab.md) — Colab CUDA・ローカルJupyterの実行、コンター図表示、CPU比較。
+- [scipy-validation.md](scipy-validation.md) — SciPy差込実験の速度・精度と、既定へ未採用とした判断。
 - [validation.md](validation.md) — GUI・OSの確認範囲と、Apple M5でのGPU併用実験。
 
 本文の数値・記号・式は、リポジトリの実装（`src/mikasa_consolidation/`）に合わせています。実装を変えたときは、この文書も更新してください。

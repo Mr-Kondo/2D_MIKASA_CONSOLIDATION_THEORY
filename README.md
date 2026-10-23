@@ -8,7 +8,7 @@
 
 ## 導入と実行
 
-Python 3.12以上と [uv](https://docs.astral.sh/uv/) が必要です。既定はNumPyによるCPU計算です。NVIDIA GPUではCUDAを明示して使用できます。
+Python 3.12以上と [uv](https://docs.astral.sh/uv/) が必要です。既定はNumPyによるCPU計算です。SciPyは必須依存に含めず、導入効果を[別途検証](docs/scipy-validation.md)しています。NVIDIA GPUではCUDAを明示して使用できます。
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Mr-Kondo/2D_MIKASA_CONSOLIDATION_THEORY/blob/main/notebooks/consolidation_cuda.ipynb)
 
